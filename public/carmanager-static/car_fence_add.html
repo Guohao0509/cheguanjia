@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>电子围栏添加</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <form class="layui-form">
+        <fieldset class="layui-elem-field">
+            <legend>添加电子围栏</legend>
+            <div class="layui-field-box">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">围栏名称</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="fenceName"   placeholder="请输入围栏名称" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">围栏半径</label>
+                        <div class="layui-input-inline">
+                            <input type="number" name="fenceArea"  placeholder="围栏半径(m)" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">开始时间</label>
+                        <div class="layui-input-inline">
+                            <input type="time"  name="fenceStartTime"    placeholder="为空则表示不和车辆绑定" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">结束时间</label>
+                        <div class="layui-input-inline">
+                            <input type="time"  name="fenceEndTime"   placeholder="请选择结束时间" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">监控类型</label>
+                        <div class="layui-input-inline">
+                            <select name="fenceType" lay-verify="required">
+                                <option value="">请选择监控类型</option>
+                                <option value="0">驶入驶出监控</option>
+                                <option value="1">驶入监控</option>
+                                <option value="2">驶出监控</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">监控状态</label>
+                        <div class="layui-input-inline">
+                            <select name="fenceStatus" lay-verify="required">
+                                <option value="">请选择监控状态</option>
+                                <option value="1">开启</option>
+                                <option value="0">停用</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+            <div class="layui-inline">
+                <button type="button" class="layui-btn layui-btn-small" lay-submit="" lay-filter="fence_add">提交</button>
+            </div>
+            <div class="layui-inline">
+                <button type="reset" class="layui-btn layui-btn-primary layui-btn-small" >重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','laydate','upload','ajax'], function (){
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+        
+        form.on('submit(fence_add)',function(data){
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            ajax.post(
+                    global.host+"api/operation/doAddFenceRule.htm",data.field,function(result){
+                        if(eval(result)==true){
+                        	window.location.reload();
+                            window.parent.layer.msg("电子围栏添加成功");
+                        }else{
+                        	 window.parent.layer.msg("电子围栏添加失败");
+                        }
+                    });
+            return false;
+        });
+       
+    });
+
+</script>
+</body>
+
+</html>

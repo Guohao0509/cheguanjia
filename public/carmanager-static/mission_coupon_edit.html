@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+    <div class="admin-main">
+        <form class="layui-form" id="J_edit_form">
+            
+        </form>
+    </div>
+<script type="text/html" id="editTemplate">
+    <fieldset class="layui-elem-field">
+        <legend>基本信息</legend>
+
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <label class="layui-form-label">任务名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="name" value='{{ d.name }}' class="layui-input" lay-verify="required">
+                </div>
+                <div class="layui-form-mid layui-word-aux">内部记录用，不会在用户端显示</div>
+            </div>
+            <!-- <div class="layui-form-item">
+                <label class="layui-form-label">任务描述</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="description" value='{{ d.description }}' class="layui-input" lay-verify="required">
+                </div>
+            </div> -->
+            <div class="layui-form-item">
+                <label class="layui-form-label">开始有效时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="startTime" value='{{ d.startTime }}' class="layui-input" id="startDate" placeholder="请输入开始时间" onclick="layui.laydate({elem: this, format: 'YYYY-MM-DD'})" lay-verify="required">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">失效时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="endTime"  value='{{ d.endTime }}' class="layui-input" id="startDate" placeholder="请输入失效时间" onclick="layui.laydate({elem: this, format: 'YYYY-MM-DD'})" lay-verify="required">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">状态</label>
+                <div class="layui-input-block">
+                    <input type="radio" name="status" value='{{ d.status }}' value="0" title="未激活" {{# if(d.status==0){ }}checked="true"{{#} }}>
+                    <input type="radio" name="status" value='{{ d.status }}' value="1" title="已激活" {{# if(d.status==1){ }}checked="true"{{#} }}>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">最大兑换人数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="maxNum" value='{{ d.maxNum }}' class="layui-input">
+                </div>
+                <div class="layui-form-mid layui-word-aux">次（每完成一次任务领取一次）</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="layui-elem-field">
+        <legend>任务类型</legend>
+        <div class="layui-form-item" id="mission_type_content">
+            
+        </div>
+    </fieldset>
+
+    <fieldset class="layui-elem-field">
+        <legend>添加优惠卷</legend>
+        <div id="content"></div>
+    </fieldset>
+    
+
+    <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+        <div class="layui-inline">
+            <button type="button" class="layui-btn layui-btn" lay-submit="" lay-filter="code_add">提交</button>
+        </div>
+        <div class="layui-inline">
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn">重置</button>
+        </div>
+    </div>
+</script>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script type="text/html" id="mission_type">
+    {{#  layui.each(d, function(index, item){ }}
+    <div class="layui-input-block couponTaskType" style="margin-left: 20px;">
+        <input type="radio" name="couponTaskType" value='{{ item.cttId }}'  title='{{ item.typeName }}' {{# if(item.checked){ }}
+        checked="true"{{#} }}>
+    </div>
+    {{#  }); }}
+</script>
+<script>
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['form', 'ajax', 'laytpl', 'laydate', 'addCoupon'], function () {
+        var $ = layui.jquery;
+        var laydate = layui.laydate();
+        var ajax = layui.ajax();
+        var form = layui.form();
+        var laytpl = layui.laytpl;
+        var addCoupon = layui.addCoupon();
+        var couponTaskType = {};
+        var layerTips = parent.layer === undefined ? layui.layer : parent.layer; //获取父窗口的layer对象
+        var couponList = {rows: []};
+        var ctId = decodeURI(getSearchString("ctId"));
+        var isInExpiryDate = decodeURI(getSearchString("isInExpiryDate")); // 由上个界面传来的是否为修改模式的字段
+        // 获取单个优惠卷        
+        ajax.post(global.host+'api/trade/getOneCouponTask', {ctId: ctId}, function (result) {
+            couponTaskType = result.couponTaskType;
+            // 构造渲染所需的数据
+            for (var i = 0; i < result.couponRegulationNumList.length; i ++) {
+                result.couponRegulationNumList[i].couponRegulation.count =  result.couponRegulationNumList[i].num;
+                couponList.rows.push(result.couponRegulationNumList[i].couponRegulation);
+            }
+
+            var editTemplate = document.getElementById('editTemplate').innerHTML;
+
+            document.getElementById("J_edit_form").innerHTML = laytpl(editTemplate).render(result);
+
+            form.render();
+            var content = document.getElementById('content');
+            // 渲染绑定优惠卷模块
+            addCoupon.set({
+                content: content,
+                data: couponList
+            });
+
+            ajax.post(global.host+'api/trade/getCouponTaskTypeNoBindTask', {operatorId: global.userInfo.operatorId}, function (result) {
+                couponTaskType.checked = true;
+                if (isInExpiryDate) {
+                    result = [];
+                }
+                result.unshift(couponTaskType);
+                console.log(result);
+                var tpl = document.getElementById('mission_type').innerHTML;
+                console.log(laytpl(tpl).render(result))
+                document.getElementById('mission_type_content').innerHTML = laytpl(tpl).render(result);
+
+                form.render();
+                
+                $('#mission_type_content').on('click', '.couponTaskType', function (e) {
+                    couponTaskType.cttId = $(this).find('input').val();
+                    couponTaskType.typeName = $(this).find('input').attr('title');
+                });
+            });
+        });
+            
+        // 提交添加优惠卷
+        form.on('submit(code_add)', function(data) {
+            // 添加
+            var  reqParams = data.field;
+            var CouponRegulationNumList = [];
+            reqParams.description = '';
+
+            for (var i = 0; i < couponList.rows.length; i ++) {
+                CouponRegulationNumList.push({
+                    "couponRegulation":{"crId": couponList.rows[i].crId},
+                    "num": couponList.rows[i].count
+                });
+                reqParams.description += couponList.rows[i].name + couponList.rows[i].count + '张<br>';
+            }
+            reqParams.CouponRegulationNumList = CouponRegulationNumList;
+            reqParams.operatorId = global.userInfo.operatorId;
+            reqParams.couponTaskType = couponTaskType;
+            reqParams.ctId = ctId;
+            console.log(reqParams)
+
+            ajax.post(global.host+'api/trade/updateCouponTask', {couponTask: JSON.stringify(reqParams)}, function (result) {
+                if(result){
+                    window.location.reload();
+                    layerTips.msg("任务红包修改成功");
+                }else{
+                    layerTips.msg("任务红包修改失败");
+                }
+            })
+        })
+        
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+    });
+</script>
+</body>
+
+</html>

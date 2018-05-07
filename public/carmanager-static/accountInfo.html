@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>账户信息</title>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="format-detection" content="telephone=no">
+	<link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+	<link rel="stylesheet" href="css/user.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+	<style type="text/css">
+		.no_account{display: none;}
+		.no_account button{margin-left: 20px;margin-top: 30px;}
+		.cash_title{margin-left: 80px;margin-top: 10px;}
+		.cash_title div{margin-left: 40px;font-size: 20px;}
+		.cash_hint{background: #DDDDDD;width: 70%;margin-left: 20px;margin-top: 30px;font-size: 16px;height:24px;line-height: 24px;}
+	     #create_form{display: none;}
+		#create_form{margin-top: 30px;}
+	</style>
+</head>
+<body class="childrenBody">
+	<form class="layui-form" id="J_edit_form">
+		
+	</form>
+	<div class="no_account">
+	<div class="cash_hint"><i  class="layui-icon" data-icon="&#xe60b;">&#xe60b;</i><label>暂无账户!</label></div>
+	<button class="layui-btn" id="create_account">创建账户>></button>
+	</div>
+	<form class="layui-form" id="create_form">
+		<fieldset class="layui-elem-field">
+		<div class="layui-field-box">
+		<div class="cash_title">
+			<div class="layui-input-inline">
+				<i class="layui-icon" data-icon="&#xe612;">&#xe612;</i>
+				<label>运营商</label>
+			</div>
+			<div class="layui-input-inline">
+				<i class="layui-icon" data-icon="&#xe612;">&#xe612;</i>
+				<label>企业用户</label>
+			</div>
+			<div class="layui-input-inline">
+				<i class="layui-icon" data-icon="&#xe612;">&#xe612;</i>
+				<label>个人</label>
+			</div>
+		</div>
+		<div class="user_left">
+		<div class="layui-form-item">
+			<label class="layui-form-label required">银行卡号</label>
+			<div class="layui-input-block">
+				<input type="text" name="cardNo"   lay-verify="required" placeholder="请输入银行卡号" class="layui-input card_no">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label required">开户银行</label>
+			<div class="layui-input-block">
+				<input type="text" name="bankName"  lay-verify="required" placeholder="请输入开户银行"  class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label required">持卡人姓名</label>
+			<div class="layui-input-block">
+				<input type="text" name="cardHolder"  placeholder="请输入持卡人姓名" lay-verify="required" class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label required">提现密码</label>
+			<div class="layui-input-block">
+				<input type="password" id="repeat_password"  name="payPwd"  placeholder="请输入提现密码" lay-verify="required|pwd_length_check" class="layui-input">
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label required">确认密码</label>
+			<div class="layui-input-block">
+				<input type="password"  placeholder="请再次输入密码" lay-verify="required|repeat_pwd_check" class="layui-input">
+			</div>
+		</div>
+		</div>
+		</div>
+		</fieldset>
+		<div class="layui-form-item" style="margin-left: 5%;">
+			<div class="layui-input-block">
+				<button class="layui-btn" lay-submit="" lay-filter="form_add">立即提交</button>
+				<button type="reset"  class="layui-btn layui-btn-primary">重置</button>
+			</div>
+		</div>
+	</form>
+	<script type="text/html" id="J_edit_form_tpl">
+       <div class="user_left">
+			<div class="layui-form-item">
+			    <label class="layui-form-label">运营商ID</label>
+			    <div class="layui-input-block">
+			    	<input type="text" value="{{d.operatorId}}" disabled class="layui-input layui-disabled">
+			    </div>
+			</div>
+            <div class="layui-form-item">
+			    <label class="layui-form-label">账户总余额</label>
+			    <div class="layui-input-block">
+			    	<input type="text"  value="{{d.balance}}" disabled class="layui-input layui-disabled">
+			    </div>
+			</div>
+              <div class="layui-form-item">
+			    <label class="layui-form-label">可提现余额</label>
+			    <div class="layui-input-block">
+			    	<input type="text"  value="{{d.freeBlance}}"  disabled class="layui-input layui-disabled">
+			    </div>
+			</div>
+            <div class="layui-form-item">
+			    <label class="layui-form-label">账户状态</label>
+			    <div class="layui-input-block">
+			    	<input type="text"  value="{{dictionary.ACCOUNT_STATUS(d.acctStatus)}}" disabled class="layui-input layui-disabled">
+			    </div>
+			</div>
+			<div class="layui-form-item">
+			    <label class="layui-form-label">提现密码</label>
+			    <div class="layui-input-inline">
+                 <input type="password" id="pwd"  value="{{dictionary.PWD_SHOW(d.payPwd)}}" required lay-verify="required" disabled autocomplete="off" class="layui-input layui-disabled">
+                </div>
+                  <button type="button" class="layui-btn layui-btn-small" id="edit_pwd">修改密码</button>
+               </div>
+               <div class="reset">
+               <div class="layui-form-item">
+                 <label class="layui-form-label">新密码</label>
+			     <div class="layui-input-inline">
+                      <input type="password" id="new_pwd"  lay-verify=""  autocomplete="off" class="layui-input">
+                 </div>
+                </div>
+                <div class="layui-form-item">
+                <label class="layui-form-label">确认新密码</label>
+			     <div class="layui-input-inline">
+                   <input type="password" id="repeat_pwd" name="password"   lay-verify=""  autocomplete="off" class="layui-input">
+                 </div>
+                   <label id="pwd_hint">两次密码输入不一致</label>
+                </div>
+              </div>
+		  <div class="layui-form-item">
+			   <label class="layui-form-label">银行卡号</label>
+			   <div class="layui-input-block">
+				   <input type="text" name="cardNo" value="{{d.cardNo}}"  lay-verify="required" placeholder="请输入银行卡号" class="layui-input card_no">
+			   </div>
+		   </div>
+			<div class="layui-form-item">
+			    <label class="layui-form-label">开户银行</label>
+			    <div class="layui-input-block">
+			    	<input type="text" name="bankName" value="{{d.bankName}}" lay-verify="required" placeholder="请输入开户银行"  class="layui-input">
+			    </div>
+			</div>
+			<div class="layui-form-item">
+			    <label class="layui-form-label">持卡人姓名</label>
+			    <div class="layui-input-block">
+			    	<input type="text" name="cardHolder" value="{{d.cardHolder}}" placeholder="请输入持卡人姓名" lay-verify="required" class="layui-input">
+			    </div>
+			</div>
+		</div>
+		<div class="layui-form-item" style="margin-left: 5%;">
+		    <div class="layui-input-block">
+		    	<button class="layui-btn" lay-submit="" lay-filter="form_edit">立即提交</button>
+				<button type="reset"  class="layui-btn layui-btn-primary">重置</button>
+		    </div>
+		</div>
+     </script>
+	<script type="text/javascript" src="plugins/layui/layui.js"></script>
+	<script type="text/javascript">
+	var global=window.parent.global;
+	layui.config({
+		base : "js/"
+	}).use(['form','ajax','layer','dictionary','dictionary','laytpl'],function(){
+		var form = layui.form();
+		var layer = parent.layer === undefined ? layui.layer : parent.layer;
+	    var $ = layui.jquery;
+	    var $form = $('form');
+	    var ajax=layui.ajax();
+	    window.dictionary = layui.dictionary();			
+		  var laytpl = layui.laytpl;
+			 //编辑模版
+	      var editFormTpl = document.getElementById("J_edit_form_tpl").innerHTML;
+	      var accountId;
+	     $.post(global.host+"api/operator/operatorAccountDetail.htm",{},function(result){
+             var data=result.data.accountInfo;
+	         if(data!=undefined){
+                 accountId=data.sysAccountId;
+                 document.getElementById("J_edit_form").innerHTML = laytpl(editFormTpl).render(data);
+			 }else{
+	             $('.no_account').show();
+			 }
+	     });
+        form.on('submit(form_add)',function(data){
+            $.extend(true, data.field,{});
+            ajax.post(
+                global.host+"api/operator/doAddAccount.htm",data.field,function(result){
+                    if(eval(result)==true) {
+                        window.parent.layer.msg("账户创建成功");
+                        window.location.reload();
+                    }else{
+                        window.parent.layer.msg("账户创建失败");
+					}
+                });
+            return false;
+        })
+        $(document).on("click","#edit_pwd",function(){
+            $("#new_pwd").attr("lay-verify","required|pwd_length_check");
+            $("#repeat_pwd").attr("lay-verify","required");
+            $(".reset").slideDown();
+        });
+        form.on('submit(form_edit)',function(data){
+            var new_pwd=$("#new_pwd").val().trim();
+            var repeat_pwd=$("#repeat_pwd").val().trim();
+            if(new_pwd!=repeat_pwd){
+                return false;
+            }else{
+                $.extend(true, data.field,{sysAccountId:accountId,payPwd:repeat_pwd});
+                ajax.post(
+                    global.host+"api/operator/doUpdateAccount.htm",data.field,function(result){
+                        if(eval(result)==true) {
+                            window.parent.layer.msg("信息修改成功");
+                            window.location.reload();
+                        }else{
+                            window.parent.layer.msg("信息修改失败");
+                        }
+                    });
+                return false;
+            }
+        });
+        $(document).on("change","#repeat_pwd",function(){
+            var new_pwd=$("#new_pwd").val();
+            var repeat_pwd=$(this).val();
+            if(new_pwd!=repeat_pwd){
+                $("#pwd_hint").show();
+            }else{
+                $("#pwd_hint").hide()
+            }
+        });
+        $("#create_account").on('click',function(){
+            $('.no_account').hide();
+            $("#create_form").show();
+        })
+        $(document).on("change","#new_pwd",function(){
+            var new_pwd=$(this).val();
+            var repeat_pwd=$("#repeat_pwd").val();
+            if(repeat_pwd!=""){
+                if(new_pwd!=repeat_pwd){
+                    $("#pwd_hint").show();
+                }else{
+                    $("#pwd_hint").hide();
+                }
+            }else{
+                $("#pwd_hint").hide()
+            }
+        });
+        $(document).on('click','button[type="reset"]',function(){
+            var new_pwd=$("#new_pwd").val();
+            var repeat_pwd=$("#repeat_pwd").val();
+            if(new_pwd==""&&repeat_pwd==""){
+                $(".reset").slideUp();
+                $("#pwd_hint").hide();
+                $("#new_pwd").attr("lay-verify","");
+                $("#repeat_pwd").attr("lay-verify","");
+            }
+        });
+        $(document).on("blur",".card_no",function(){
+            var card_no=$(this).val().trim();
+            if(card_no!=''&&card_no.length>6){
+                var card_no_prefix=$(this).val().substr(0,6);
+                var $that=$(this);
+                $.get('datas/bankData.json',{},function(data){
+                    var len=data.length;
+                    for(var i=0;i<len;i++){
+                        if(data[i].bin==card_no_prefix){
+                            $that.parent().parent().next().find('input').val(data[i].bankName);
+                            break;
+                        }
+                    }
+                })
+            }else{
+                $(this).parent().parent().next().find('input').val('');
+            }
+        });
+        form.verify({
+            pwd_length_check:[/^[\S]{6,12}$/,'密码长度需在6到12位且不能出现空格'],
+            repeat_pwd_check:function(value){
+                if($('#repeat_password').val()!=value){
+                    return '两次密码不一致';
+                }
+            }
+        });
+	    
+	})
+	</script>
+	
+</body>
+</html>

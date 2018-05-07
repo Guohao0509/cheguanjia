@@ -1,0 +1,299 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+
+<div class="admin-main">
+    <form class="layui-form">
+        <fieldset class="layui-elem-field">
+            <legend>基本信息</legend>
+            <div class="layui-field-box">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">优惠卷名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="coupon_name" class="layui-input">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">为空将由系统生成券名称，在用户券面中显示</div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                      <input id="couponValidType1" type="radio" name="coupon_type" value="0" title="指定有效期" checked="">
+                      <input id="couponValidType2" type="radio" name="coupon_type" value="1" title="领取后指定时长过期">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">有效期开始</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="startTime" class="layui-input" id="startDate" placeholder="yyyy-MM-dd" onclick="layui.laydate({elem: this, format: 'YYYY-MM-DD'})" lay-verify="required">
+                    </div>
+                  </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">有效期结束</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="endTime" class="layui-input" id="endDate" placeholder="yyyy-MM-dd" onclick="layui.laydate({elem: this, format: 'YYYY-MM-DD'})" lay-verify="required">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">过期时长</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="coupon_time" class="layui-input" lay-verify="required">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">小时</div>
+                </div>
+                
+                <div class="layui-form-item">
+                    <label class="layui-form-label">备注</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="coupon_other" class="layui-input">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">可以用作自定义区分不同类型的券，例如公务券等等</div>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="layui-elem-field">
+            <legend>优惠方案</legend>
+            
+            <div class="layui-field-box" id="cPlan">
+                
+            </div>
+        </fieldset>
+        <fieldset class="layui-elem-field">
+            <legend>使用区域</legend>
+
+            <div class="layui-field-box" id="cArea"></div>
+
+        </fieldset>
+        <fieldset class="layui-elem-field">
+            <legend>使用时段</legend>
+            
+            <div class="layui-field-box" id="cTime"></div>
+            
+        </fieldset>
+        <fieldset class="layui-elem-field">
+            <legend>订单类型</legend>
+            
+            <div class="layui-field-box" id="cType"></div>
+            
+        </fieldset>
+        <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+            <div class="layui-inline">
+                <button type="button" class="layui-btn layui-btn" lay-submit="" lay-filter="coupon_add">提交</button>
+            </div>
+            <div class="layui-inline">
+                <button type="reset" class="layui-btn layui-btn-primary layui-btn">重置</button>
+            </div>
+        </div>
+    </form>
+            
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+
+<script type="text/javascript" src="./js/coupon.js"></script>
+<script type="text/html">
+
+</script>
+
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','laydate', 'couponPlan', 'couponLimitArea', 'couponLimitTime', 'couponLimitType', 'ajax', 'layer'], function (){
+        var $ = layui.jquery;
+        var form = layui.form();
+        var laydate = layui.laydate();
+        var couponPlan = layui.couponPlan();
+        var layer = layui.layer;
+        var ajax = layui.ajax();
+        var couponLimitArea = layui.couponLimitArea();
+        var couponLimitTime = layui.couponLimitTime();
+        var couponLimitType = layui.couponLimitType();
+        
+        // 加载构建界面的数据
+        ajax.post(global.host+"api/trade/getCouponLimitInfo",{},function(data){
+            var preferentialType = data.preferentialType;
+            var limitType = data.limitType;
+            var limitAreaData = [];
+            var limitTimeData = [];
+            var limitTypeData = [];
+            // 根据模块的不同来个渲染界面
+            for (var i = 0; i < limitType.length; i ++) {
+                switch (limitType[i].type) {
+                    case 0:
+                        limitAreaData.push(limitType[i]);
+                        break;
+                    case 1:
+                        limitTimeData.push(limitType[i]);
+                        break;
+                    case 2:
+                        limitTypeData.push(limitType[i]);
+                        break;
+                }
+            }
+            // 优惠卷基础方案
+            couponPlan.set({
+                container: 'cPlan',
+                data: preferentialType
+            });
+            // 区域限制
+            couponLimitArea.set({
+                container: '#cArea',
+                data: limitAreaData
+            })
+            // 时间闲置
+            couponLimitTime.set({
+                container: '#cTime',
+                data: limitTimeData
+            });
+            // 类型限制
+            couponLimitType.set({
+                container: '#cType',
+                data: limitTypeData
+            })
+        });
+
+        form.on('submit(coupon_add)',function(data){
+            // 构造参数数据结构
+            var coupon = data.field;
+            // 优惠规则的参数
+            var cptParamValue = {};
+            var cptInputs = $('#cPlan').find('input[name!="cptId"][type!="hidden"]');
+
+            for (var i = 0; i < cptInputs.length; i ++) {
+                cptParamValue[$(cptInputs[i]).attr('name')] =  $(cptInputs[i]).val();         
+            }
+            
+            // 区域限制的参数
+            var cAreaParams = {
+                couponLimitType: { },
+                paramValue: { }
+            }
+            cAreaParams.couponLimitType.cltId = coupon.areaCltId;
+
+            var cAreaInputs = $('#cArea').find('input[type="hidden"][lay-name!="tmpInput"]');
+            for (var i = 0; i < cAreaInputs.length; i ++) {
+                cAreaParams.paramValue[$(cAreaInputs[i]).attr('name').slice(3)] = $(cAreaInputs[i]).val();
+            }
+
+            // 时间端限制的参数
+            var cTimeParams = {
+                couponLimitType: { },
+                paramValue: { }
+            }
+            cTimeParams.couponLimitType.cltId = coupon.timeCltId;
+
+            var cTimeInputs = $('#cTime').find('input[lay-name!="tmpInput"]');
+            for (var i = 0; i < cTimeInputs.length; i ++) {
+                cTimeParams.paramValue[$(cTimeInputs[i]).attr('name')] =  $(cTimeInputs[i]).val();
+            }
+
+            console.log(cTimeParams)
+            // 订单类型限制的参数
+            var cTypeParams = {
+                couponLimitType: { },
+                paramValue: { }
+            }
+            
+            cTypeParams.couponLimitType.cltId = coupon.typeCltId;
+            var cTypeInputs = $('#cType').find('input[type="hidden"][lay-name!="tmpInput"]');
+            for (var i = 0; i < cTypeInputs.length; i ++) {
+                cTypeParams.paramValue[$(cTypeInputs[i]).attr('name').slice(3)] =  $(cTypeInputs[i]).val();
+            }
+
+            var couponLimitTypeParamValueList = [];
+            cAreaParams.couponLimitType.cltId  && couponLimitTypeParamValueList.push(cAreaParams);
+            cTimeParams.couponLimitType.cltId  && couponLimitTypeParamValueList.push(cTimeParams);
+            cTypeParams.couponLimitType.cltId  && couponLimitTypeParamValueList.push(cTypeParams);
+            
+            var reqParams = {
+                operatorId: global.userInfo.operatorId,
+                nominalValue: coupon.nominal, // 票面值
+                unit: coupon.nominalUnit, // 单位
+                instructions: '', // 使用说明
+                couponPreferentialType: {
+                    cptId: coupon.cptId
+                }, // 优惠券计算规则
+                cptParamValue: cptParamValue, // 优惠券计算规则参数值
+                couponLimitTypeParamValueList: couponLimitTypeParamValueList, // 优惠券限制类型列表
+                name: coupon.coupon_name,
+                expiresTime: coupon.coupon_time, // 过期时长
+                startTime: coupon.startTime, // 开始时间
+                endTime: coupon.endTime,
+                remark: coupon.coupon_other
+            }
+            var instructions = '';
+            instructions += Form.templates.plan ? Form.templates.plan + '<br>' : '';
+            instructions += Form.templates.area ? Form.templates.area + '<br>' : '';
+            instructions += Form.templates.time ? Form.templates.time + '<br>' : '';
+            instructions += Form.templates.type ? Form.templates.type + '<br>': '';
+            instructions += (coupon.startTime && coupon.endTime) ? '有效期' + coupon.startTime + '至' + coupon.endTime + '<br>' : '';
+            instructions += coupon.expiresTime ? '过期时长为' + coupon.expiresTime + '小时' + '<br>' : '';
+            var instructions = instructions.replace(/\{\{(.*?)\}\}/g, function (match, word) {
+                var type = ['分时', '长租', '夜租', '运维'];
+                var str = coupon[word];
+                
+                if (word == 'ordertype') {
+                    str = type[preview[word]];
+                }
+                return str;
+            });
+            reqParams.instructions = instructions;
+
+            var couponTemplate = 
+                '<div class="coupon-wrapper" style="height: 220px">' +
+                    '<div class="coupon-price">' +
+                        '<span class="coupon-value">' + coupon.nominal + '</span>' +
+                        '<span class="coupon-unit">' + coupon.nominalUnit + '</span>' +
+                    '</div>' +
+                    '<div class="coupon-name">' + coupon.coupon_name + '</div>' +
+                    '<div class="coupon-rule">' +
+                        instructions +
+                    '</div>' +
+                '</div>'
+                ;
+            
+            layer.confirm(couponTemplate , {
+                area: '400px',
+                btn: ['确定', '取消'] //按钮
+            }, function(){
+                ajax.post(global.host + "api/trade/doAddCoupon", {couponRegulation: JSON.stringify(reqParams)}, function (data) {
+                    // 预览优惠卷
+                    if (data == true) {
+                        window.location.reload();
+                        layer.open({
+                            title: '提示',
+                            content: '添加优惠卷成功'
+                        });
+                    } else {
+                        layer.open({
+                            title: '提示',
+                            content: '添加优惠卷失败'
+                        });
+                    }
+                }, function (err) {
+                    layer.open({
+                        title: '提示',
+                        content: '添加优惠卷失败'
+                    });
+                })
+            }, function(){
+                // 取消添加优惠卷
+            });
+
+            return false;
+        });
+
+    });
+</script>
+</body>
+
+</html>

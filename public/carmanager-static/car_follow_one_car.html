@@ -1,0 +1,174 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>车辆跟踪</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+    <style>
+        html,body{width:100%;height:100%;}
+        .main{height:100%;position:relative}
+        .car-data-box{position: absolute;width:199px;bottom:0;left:0;top:0; border-right: 1px solid #dddddd;}
+        .map-box{position: absolute;left:200px;top:0;right:0;bottom:0}
+        .car-data-box .car-data-line{padding:0px 1px 0px 5px!important;}
+        .car-data-box .car-data-line .name{display: inline-block;width:73px;text-align: right}
+        .car-data-box h3{font-size: 16px;padding: 12px 5px 7px 10px;}
+        .car-data-box .car-data-line .value{display: inline-block;vertical-align: top;width:120px;color: #666;}
+    </style>
+</head>
+<div class="main">
+    <div class="car-data-box">
+        <div class="car-data-box" id="J_car_data_box">
+        </div>
+        <div class="pagination-box" id="J_pagination_box"></div>
+    </div>
+    <div class="map-box" id="J_map_box"></div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script type="text/javascript" src="http://webapi.amap.com/maps?v=1.3&key=1a5cdec55ebac9dbd85652429f54d4d1"></script>
+<script type="text/html" id="J_car_marker_tpl">
+    <style>
+        .marker-container{position:relative;font-size:14px;}
+        .marker-info-container{
+            -moz-user-select: text;
+            -khtml-user-select: text;
+            user-select: text;
+            padding: 5px 15px;
+            background: rgba(255, 255, 255, 0.92) none repeat scroll 0 0 !important;
+            filter: Alpha(opacity=92);
+            background-color: rgb(255,255,255);
+            -webkit-box-shadow: 0 0 8px rgba(0,0,0,0.5);
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+            border: 1px solid #ffffff;
+            border-radius: 3px;
+            cursor: default;
+            animation-fill-mode:forwards;
+            animation:action_translateY .3s ease;
+            position: absolute;width:250px;left:50%;margin-left:-135px;bottom:70px;min-height: 100px;z-index: 999999!important;}
+        p{padding:0!important;margin:0!important;line-height: 24px;}
+        .amap-marker-content{white-space:inherit!important;}
+        .marker{width:58px;height: 58px;text-align:center}
+        .close-btn{position: absolute;right:10px;top:10px;cursor: pointer;}
+        @keyframes action_translateY{
+            0%{transform: translateY(50px);opacity: 0;}
+            100%{ transform: translateY(0px);opacity: 1;}
+        }
+    </style>
+    <div class="marker-container">
+        <div class="marker" data-id="{{'J_car_info_'+d.carId}}" style="{{'transform:rotate('+d.travelDir+'deg);'}}"><img src="images/car2.png"></div>
+        <div class="marker-info-container slideInUp" style="display: none" onmousedown="event.stopPropagation();" id="{{'J_car_info_'+d.carId}}" draggable="true" ondragstart="myFunction(event)">
+            <p>当前状态：{{d.plateNum}}({{dictionary.OBD_CONN_STATUS(d.carStatus)}})</p>
+            <p>车架号：{{d.vin}}</p>
+            <p>当前：{{d.tripMileage}}km 续航：{{d.cruisingDistance}} km</p>
+            <p>车速：{{d.currentSpeed}}km/h</p>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-mini">历史轨迹</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-mini"  id="J_add_button">实时跟踪</button>
+                </div>
+            </div>
+            <div class="close-btn" data-id="{{'J_car_info_'+d.carId}}">X
+            </div>
+        </div>
+
+    </div>
+</script>
+<script type="text/html" id="J_car_info_tpl">
+    <h3>车辆实时状态</h3>
+    <p class="car-data-line">
+        <span class="name">车牌号：</span><span class="value">{{d.plateNum}}</span>
+    </p>
+    <p class="car-data-line">
+        <span class="name">当前车速：</span><span class="value">{{d.currentSpeed}} km/h</span>
+    </p>
+    <p class="car-data-line">
+        <span class="name">总里程：</span><span class="value">{{d.tripMileage}} km</span>
+    </p>
+    <p class="car-data-line">
+        <span class="name">剩余电量：</span><span class="value">{{d.currentElectricity}} %</span>
+    </p>
+    <p class="car-data-line">
+        <span class="name">剩余续航：</span><span class="value">{{d.cruisingDistance}} km</span>
+    </p>
+    <p class="car-data-line">
+        <span class="name">引擎状态：</span><span class="value">{{dictionary.WORK_STATUS(d.workStatus)}}</span>
+    </p>
+    <p class="car-data-line">
+        <span class="name">充电状态：</span><span class="value">{{dictionary.CHARGE_STATUS(d.chargeStatus)}}</span>
+    </p>
+    <p class="car-data-line">
+        <span class="name">更新时间：</span><span class="value">{{d.recordTime}}</span>
+    </p>
+    <p class="car-data-line">
+        <span class="name">OBD时间：</span><span class="value">{{d.gpsRecordTime}}</span>
+    </p>
+    <p class="car-data-line">
+        <span class="name">当前位置：</span><span class="value">{{d.carPosition}}</span>
+    </p>
+</script>
+<script>
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['dictionary','ajax','laytpl'], function () {
+        window.dictionary = layui.dictionary();
+        var ajax = layui.ajax();
+        var laytpl = layui.laytpl;
+        //获取车辆编号
+        var carId = getSearchString("carId");
+        //创建地图
+        var map = new AMap.Map('J_map_box', {
+            resizeEnable: true,
+            zoom:16,
+            center: [116.397428, 39.90923]
+        });
+        var marker = undefined;
+        //定时更新车辆位置
+        var refreshCarStatus = function(){
+            ajax.post(
+                    global.host+"api/operation/getCarStatus",{carId:carId},function(data){
+                        //更新左侧车辆信息模板
+                        var carDataInfoTpl = document.getElementById("J_car_info_tpl").innerHTML;
+                        //同步左侧车辆信息模板
+                        document.getElementById("J_car_data_box").innerHTML = laytpl(carDataInfoTpl).render(data);
+                        var content = laytpl(document.getElementById("J_car_marker_tpl").innerHTML).render(data);
+                        if(marker){
+                            marker.setPosition(new AMap.LngLat(data.longitude,data.latitude));
+                        }else{
+                            marker = new AMap.Marker({
+                                position: [data.longitude, data.latitude],
+                                content:content,
+                                map:map
+                            });
+                        }
+                        map.panTo(new AMap.LngLat(data.longitude,data.latitude));//地图中心点平移
+                    });
+        }
+        refreshCarStatus();
+        window.setInterval(refreshCarStatus,2000);
+    });
+</script>
+</body>
+</html>

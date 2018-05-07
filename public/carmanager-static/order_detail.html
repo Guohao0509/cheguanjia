@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>订单详情</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+    <link rel="stylesheet" href="css/viewer.min.css" />
+    <style type="text/css">
+        img{cursor: pointer;}
+        #pic{position: absolute; display: none;z-index: 999;}
+        #pic1{ width: 500px; height: 300px; border-radius: 5px; -webkit-box-shadow: 5px 5px 5px 5px hsla(0,0%,5%,1.00); box-shadow: 5px 5px 5px 0px hsla(0,0%,5%,0.3); }
+        .postbird-img-glass-box i{cursor: pointer;}
+    </style>
+</head>
+<body>
+<div class="admin-main">
+    <form class="layui-form" id="J_edit_form">
+
+    </form>
+</div>
+<script type="text/html" id="J_edit_form_tpl">
+    <fieldset class="layui-elem-field">
+        <legend>订单信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">订单操作</label>
+                    <button type="button" class="layui-btn layui-btn-small" id="J_historical_btn">订单轨迹</button>
+                    <button type="button" class="layui-btn layui-btn-small" id="J_car_position">车辆位置</button>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">主订单号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.rcOrderId}}" disabled   placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">车牌号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.plateNum}}" disabled    placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">订单状态</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{dictionary.ORDER_STATUS(d.rentCarOrder.orderStatus)}}" disabled    placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                {{#if(d.useCarOrder==null){ }}
+                <div class="layui-inline">
+                    <label class="layui-form-label">取车站点</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.stationName}}"          disabled    lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                {{#} }}
+                <div class="layui-inline">
+                    <label class="layui-form-label">开始时间</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.startTime}}" disabled    placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">完成时间</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.endTime}}" disabled    placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">订单类型</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{dictionary.RENT_TYPE(d.rentCarOrder.rentType)}}" disabled    placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">取车类型</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{dictionary.PICK_CAR_TYPE(d.rentCarOrder.pickCarType)}}" disabled    placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">租车金额</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.rentMoney}}" disabled    placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">附加金额</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.attachMoney}}" disabled    placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">优惠减免</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.couponMoney}}" disabled    placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">总金额</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.amounts}}" disabled    placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    {{#if(d.useCarOrder!=null){ }}
+    <fieldset class="layui-elem-field">
+        <legend>用车信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">车牌号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.useCarOrder.plateNum}}" disabled    lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">租金</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.useCarOrder.rentCost}}" disabled    lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">取车站点</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.stationName}}"          disabled    lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">还车站点</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.eStationName}}"    disabled    lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            {{#if(d.rentCarOrder.orderStatus==2||d.rentCarOrder.orderStatus==5){ }}
+              <div class="layui-form-item">
+                  <div class="layui-inline">
+                      <label class="layui-form-label">取车前照片</label>
+                      {{#  layui.each(d.useCarOrder.pickCarPhotoList, function(index, item){ }}
+                      <div class="layui-input-inline">
+                          <a href="javascript:;"><img src="{{item}}" data-original="{{item}}" width="150" height="100"></a>
+                      </div>
+                      {{#  }); }}
+                      {{#  if(d.useCarOrder.pickCarPhotoList=== undefined){ }}
+                      <div class="layui-input-inline">
+                          <img src="images/nop.png"  width="150px" height="100px">
+                      </div>
+                      {{#  } }}
+                  </div>
+              </div>
+             <div class="layui-form-item">
+                  <div class="layui-inline">
+                      <label class="layui-form-label">还车前照片</label>
+                      {{#  layui.each(d.useCarOrder.returnCarPhotoList, function(index, item){ }}
+                      <div class="layui-input-inline">
+                          <a href="javascript:;"><img src="{{item}}" data-original="{{item}}" width="150" height="100"></a>
+                      </div>
+                      {{#  }); }}
+                      {{#  if(d.useCarOrder.returnCarPhotoList=== undefined){ }}
+                        <div class="layui-input-inline">
+                            <img src="images/nop.png"  width="150px" height="100px">
+                        </div>
+                      {{#  } }}
+                  </div>
+              </div>
+            {{#} }}
+        </div>
+    </fieldset>
+    {{#} }}
+    <fieldset class="layui-elem-field">
+        <legend>用户信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">姓名</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.realName}}" disabled   lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">手机号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" value="{{d.rentCarOrder.mobile}}" disabled     lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</script>
+<script type="text/javascript" src="js/viewer.min.js"></script>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+
+<script>
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','laydate','upload','ajax','laytpl','dictionary'], function (){
+        var laytpl = layui.laytpl;
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+        window.dictionary = layui.dictionary();
+        //编辑模版
+        var editFormTpl = document.getElementById("J_edit_form_tpl").innerHTML;
+        //车辆信息
+        var rcOrderId =getSearchString("rcOrderId");
+
+        ajax.post(
+                global.host+"api/trade/getRcOrderDetail.htm",{
+                    operatorId: global.userInfo.operatorId,
+                    rcOrderId:rcOrderId
+                },function(data){
+                    document.getElementById("J_edit_form").innerHTML = laytpl(editFormTpl).render(data);
+                    var viewer = new Viewer(document.getElementById('J_edit_form'), {
+                      url: 'data-original'
+                      ,fullscreen:false
+                    });
+                $(".layui-input-inline a").hover(function(){
+                    $(this).append("<p id='pic'><img src='"+$(this).find('img').attr('src')+"' id='pic1'></p>");
+                    $(".layui-input-inline a").mousemove(function(e){
+                        $("#pic").css({
+                            "top":"100px",
+                            "left":"150px"
+                        }).fadeIn("fast");
+                        // $("#pic").fadeIn("fast");
+                    });
+                },function(){
+                    $("#pic").remove();
+                });
+                    $("body").on("click","#J_historical_btn",function(){
+                        if(data.useCarOrder){
+                            var startTime = new Date(data.rentCarOrder.startTime).getTime();
+                            var endTime = data.rentCarOrder.endTime==null?new Date().getTime():new Date(data.rentCarOrder.endTime).getTime();
+                            parent.tab.tabAdd({
+                                href: 'car_historical.html?carId='+data.useCarOrder.carId+"&startTime="+startTime+"&endTime="+endTime, //地址
+                                icon:"fa fa-pencil-square-o",
+                                title:data.useCarOrder.plateNum+"轨迹",
+                                autoRefresh:true
+                            });
+                        }else{
+                            layer.alert("该订单没有使用车辆，无法查看轨迹");
+                        }
+                    });
+                    $("body").on("click","#J_car_position",function(){
+                        if(data.useCarOrder){
+                            var startTime = new Date(data.rentCarOrder.startTime).getTime();
+                            var endTime = data.rentCarOrder.endTime==null?new Date().getTime():new Date().getTime(data.rentCarOrder.endTime);
+                            parent.tab.tabAdd({
+                                href: 'car_follow_one_car.html?carId='+data.useCarOrder.carId, //地址
+                                icon:"fa fa-pencil-square-o",
+                                title:data.useCarOrder.plateNum+"跟踪",
+                                autoRefresh:true
+                            });
+                        }else{
+                            layer.alert("该订单没有使用车辆，无法查看车辆位置");
+                        }
+                    });
+                    
+                });
+
+     });
+</script>
+</body>
+
+</html>

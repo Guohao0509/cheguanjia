@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		<title>登录</title>
+		<link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+		<link rel="stylesheet" href="css/login.css" />
+	</head>
+	<body class="beg-login-bg">
+	    <script>
+            if (window != top) {
+                top.location.href = location.href;
+            }
+		</script>
+		<div class="beg-login-box">
+			<header>
+				<div>
+					<img src="images/logo.png" style="margin-top: -8px;" width="36px" height="36px">
+					<h1 style="display: inline-block;">车管家服务平台</h1>
+				</div>
+			</header>
+			<div class="beg-login-main">
+				<form action="javascript:;" class="layui-form" method="post"><input name="__RequestVerificationToken" type="hidden" value="fkfh8D89BFqTdrE2iiSdG_L781RSRtdWOH411poVUWhxzA5MzI8es07g6KPYQh9Log-xf84pIR2RIAEkOokZL3Ee3UKmX0Jc8bW8jOdhqo81" />
+					<div class="layui-form-item">
+						<label class="beg-login-icon">
+                        <i class="layui-icon">&#xe612;</i>
+                    </label>
+						<input type="text" name="userName" lay-verify="required" autocomplete="off" id="userName" placeholder="这里输入登录名" class="layui-input">
+					</div>
+					<div class="layui-form-item">
+						<label class="beg-login-icon">
+                        <i class="layui-icon">&#xe642;</i>
+                    </label>
+						<input type="password" name="passWord" lay-verify="required" autocomplete="off"  id="password" placeholder="这里输入密码" class="layui-input">
+					</div>
+					<div class="layui-form-item">
+						<div class="beg-pull-left beg-login-remember">
+							<label>记住帐号？</label>
+							<input type="checkbox" name="rememberMe"  lay-skin="switch" checked title="记住帐号">
+						</div>
+						<div class="beg-pull-right">
+							<button class="layui-btn layui-btn-primary" lay-submit id="login" lay-filter="login">
+                            <i class="layui-icon">&#xe650;</i> 登录
+                        </button>
+						</div>
+						<div class="beg-clear"></div>
+					</div>
+				</form>
+			</div>
+			<footer>
+				<p>版权所有 © www.happyev.com</p>
+			</footer>
+		</div>
+		<script type="text/javascript" src="js/config.js"></script>
+		<script type="text/javascript" src="plugins/layui/layui.js"></script>
+		<script type="text/javascript" src="js/md5.js"></script>
+		<script>
+		window.onload=function(){
+            layui.config({
+				base: 'js/',
+				v: new Date().getTime()
+			}).use(['layer', 'form','ajax'], function() {
+				var form = layui.form();
+				var ajax = layui.ajax();
+				var layer = layui.layer;
+				var $=layui.jquery;
+				$.get(global.host+"api/system/isAutoLogin.htm",{},function(result){
+				    $('#userName').val(result['data']['userName']);
+					$('#password').val(result['data']['password']);
+					if($('#userName').val()!=''){
+                       $('#login').click();
+					}
+				});
+
+				form.on('submit(login)',function(formData){
+					//发送网络请求进行登录
+					ajax.post(
+							global.host+"api/system/doCheckUser.htm",
+							{
+								userName:formData.field.userName,
+								passWord:hex_md5(formData.field.passWord),
+								realPwd:formData.field.passWord,
+								rememberMe:formData.field.rememberMe
+							},
+							function(data){
+								window.location.href = 'index.html?userInfo='+	encodeURI(JSON.stringify(data));
+							},function(data){
+								if(data.code){
+									layer.msg(data.data);
+								}else{
+								layer.alert(JSON.stringify(data));
+								}
+							});
+					return false;
+				});
+			});
+		}
+				
+		</script>
+	</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">优惠卷ID</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="crId" placeholder="请输入优惠卷ID" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">优惠卷名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="name" placeholder="请输入优惠卷名称" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">备注</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="remark" placeholder="请输入备注" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">优惠卷状态</label>
+                    <div class="layui-input-inline">
+                        <select name="isInExpiryDate">
+                            <option value="0" selected>使用中</option>
+                            <option value="1">已过期</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                <div class="layui-inline" id="export_select">
+                      
+                </div>
+                 <div class="layui-inline">
+                    <!-- <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="export_info" >导出信息</button> -->
+                    <!-- <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="codeCoupon">投放红包</button> -->
+                </div>
+            </div>
+        </form>
+    </fieldset>
+    <div id="content"></div>
+</div>
+
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script type="text/html" id="template">
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space20" style="margin-bottom:100px;">
+            {{#  layui.each(d.rows, function(index, item){ }}
+            <div class="layui-col-md3">
+                <div class="coupon-wrapper">
+                    <div>
+                        <div class="coupon-price">
+                            <span class="coupon-value">{{ item.nominalValue }}</span>
+                            <span class="coupon-unit">{{ item.unit }}</span>
+                        </div>
+                        <div class="coupon-name">{{ item.name }}</div>
+                        <div class="coupon-rule">
+                            {{ item.instructions }}
+                            
+                        </div>
+                        <div class="coupon-button">
+                            <div class="coupon-copy">
+                                券ID: {{ item.crId }}
+                                <a class="copyTextBtn copy-btn" data-text="{{ item.crId }}">
+                                    复制
+                                    <!-- <input type="text" value='{{ item.crId }}' style="height:0px;border: 0;"> -->
+                                </a>
+                            </div>
+                            <button data-obj='{{ JSON.stringify(item) }}' class='layui-btn layui-btn-mini layui-btn-danger deleteCoupon'>删除</button>
+                            <button data-obj='{{ JSON.stringify(item) }}'  class='layui-btn layui-btn-mini distribute'>手动发放</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{#  }); }}
+        </div>
+    </div>                     
+</script>
+<script>
+
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['form', 'couponTable', 'ajax', 'copyText'], function () {
+        var $ = layui.jquery;
+        var couponTable = layui.couponTable();
+        var ajax = layui.ajax();
+        var form = layui.form();
+        var copyText = layui.copyText();
+        var layerTips = parent.layer === undefined ? layui.layer : parent.layer; //获取父窗口的layer对象
+
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+
+        var params = {
+            t: new Date().getTime(),
+            operatorId:global.userInfo.operatorId
+        };
+        $.extend(true,params,$("#J_search_form").serializeObject());
+        
+        couponTable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/trade/getBaseCouponList',
+            pageSize: 8,
+            params: params,
+            paged: true,
+            panel: template.innerHTML,
+            onSuccess: function () {
+                $('.deleteCoupon').on('click', function (e) {
+                    var item = $(e.target).attr('data-obj');
+                    deleteCoupon(item)
+                });
+
+                $('.distribute').on('click', function (e) {
+                    var jsonStr = $(e.target).attr('data-obj');
+                    var item = JSON.parse($(e.target).attr('data-obj'));
+                    var jsonStr = encodeURI(jsonStr);
+                    parent.tab.tabAdd({
+                        href: 'coupon_distribute.html?coupon_info=' + jsonStr, //地址
+                        icon:"fa fa-pencil-square-o",
+                        title: item.name
+                    });
+                });
+                copyText.init();
+
+                // $('.coupon-copy a').on('click', function (e) {
+                //     var inputText = $(e.target).find('input')[0];
+                //     inputText.focus();
+                //     inputText.setSelectionRange(0, inputText.value.length);
+                //     document.execCommand('copy', true);
+                //     inputText.blur();
+                // });
+                
+                // 删除兑换码
+                function deleteCoupon (item) {
+                    var item = JSON.parse(item);
+                    var tmp = '<ul>';
+                    ajax.post(global.host+"api/trade/getLimitOfDeleteCoupon",{
+                        crId: item.crId
+                    },function(data){
+                        if (data.exchangeCode) {
+                            tmp += '<li>兑换码红包数：( ' + data.exchangeCode + ' )<li>';
+                        }
+                        if (data.couponCarCount) {
+                            tmp += '<li>车辆红包数：( ' + data.couponCarCount + ' )<li>';
+                        }
+                        if (data.couponTaskCount) {
+                            tmp += '<li>任务红包红包数：( ' + data.couponTaskCount + ' )<li>';
+                        }
+                        if (data.couponActivityCount) {
+                            tmp += '<li>活动红包数：( ' + data.couponActivityCount + ' )<li>';
+                        }
+
+                        var btn = ['删除', '取消'];
+
+                        var content = 
+                        '<div class="coupon-wrapper" style="height: 220px;">' +
+                            '<div class="coupon-price">' +
+                                '<span class="coupon-value">' + item.nominalValue + '</span>' +
+                                '<span class="coupon-unit">' + item.unit + '</span>' +
+                            '</div>' +
+                            '<div class="coupon-name">' + item.name + '</div>' +
+                            '<div class="coupon-rule">' +
+                                item.instructions +
+                            '</div>' +
+                        '</div>' +
+                        '<div>' +
+                            '<p style="color: #FF5722;">该优惠券在下面进行中的投放活动中有绑定，无法删除，请先从下列投放活动中解除绑定。</p>' +
+                            '<ul>' +
+                                tmp +
+                            '</ul>' +
+                        '</div>'
+                        ;
+
+                        layer.confirm(content , {
+                            area: '400px',
+                            btn: btn //按钮
+                        }, function(){
+                            ajax.post( global.host+"api/trade/doDeleteCoupon",{
+                                crId: item.crId,
+                            },function(data){
+                                layer.msg('删除成功');
+                                couponTable.get(params);
+                            })
+                        }, function(){
+                        });
+                    });
+                }
+            }
+        })
+        couponTable.render();
+
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            couponTable.get(data.field);
+            return false;
+        });
+        
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+        // $('#codeCoupon').on('click', function (e) {
+        //     parent.tab.tabAdd({
+        //         href: 'code_coupon.html', //地址
+        //         icon:"fa fa-pencil-square-o",
+        //         title: '投放红包'
+        //     });
+        // });
+
+    });
+</script>
+</body>
+
+</html>

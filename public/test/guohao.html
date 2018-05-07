@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="./layui-v2.2.5/layui/css/layui.css">
+    <script src="./layui-v2.2.5/layui/layui.js"></script>
+    <script src="./coupon.js"></script>
+</head>
+<body>
+    <fieldset class="layui-elem-field">
+        <legend>添加obd设备</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label required">SN序列号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="SN"  id="sn"  placeholder="请输入SN序列号" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">设备编号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="imei" id="imie"  placeholder="请输入设备编号" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">SIM卡号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="mobile"  placeholder="请输入SIM卡号" lay-verify="required|sim_format" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">车牌号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="plateNum"  lay-verify="plateNum_format"  placeholder="为空则表示不和车辆绑定" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">服务器IP</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="ipList"   placeholder="请输入服务器ip" lay-verify="required|ip_format" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">上传间隔</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="uploadTime"   placeholder="数据上传间隔时间" lay-verify="required|number" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">心跳间隔</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="heartBeatTime"   placeholder="心跳维持间隔时间" lay-verify="required|number" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">设备类型</label>
+                    <div class="layui-input-inline">
+                        <select name="imeiType" lay-verify="required">
+                            <option value="">请选择设备类型</option>
+                            <option value="0">标准</option>
+                            <option value="1">混合</option>
+                            <option value="2">分时租赁</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">设备版本</label>
+                    <div class="layui-input-inline">
+                        <select name="imeiVersion" lay-verify="required">
+                            <option value="">请选择设备版本</option>
+                            <option value="1">V1.0</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-inline">
+                    <label class="layui-form-label required">安装时间</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="instalTime" id="instalTime" lay-verify="required" placeholder="yyyy-MM-dd"  autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">设备状态</label>
+                    <div class="layui-input-inline">
+                        <select name="imeiStatus" lay-verify="required">
+                            <option value="">请选择设备状态</option>
+                            <option value="1">已启用</option>
+                            <option value="0">未启用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">钥匙编号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="keyCode" id="J_keycode_text" lay-verify="required" autocomplete="off" disabled class="layui-input layui-disabled">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </fieldset>
+
+    <script>
+        var params = {
+            "key": "minConsume",
+            "label": "最小消费",
+            "type": "text",
+            "unit": "元",
+            "tip": "使用此优惠的订单最低金额",
+            "regex": /(.+){6,12}$/,
+            "api": ""
+        }
+        var params1 = {
+            "key": "maxConsume",
+            "label": "最大减免",
+            "type": "number",
+            "unit": "元",
+            "tip": "使用此优惠的订单最大减免金额",
+            "regex": /(.+){4,5}$/,
+            "api": ""
+        }
+        var params2 = {
+            "key": "time",
+            "label": "时间",
+            "type": "time",
+            "unit": "",
+            "tip": "请选择时间",
+            "regex": "",
+            "api": ""
+        }
+        var params3 = {
+            "key": "order",
+            "label": "订单",
+            "type": "select",
+            "unit": "",
+            "tip": "请选择类型",
+            "regex": "",
+            "api": "getOrder"
+        }
+        var params4 = {
+            "key": "city",
+            "label": "城市",
+            "type": "select",
+            "unit": "",
+            "tip": "请选择城市",
+            "regex": "",
+            "api": "getCity"
+        }
+
+        layui.use(['form', 'layedit', 'laydate', 'ajax'], function(){
+            
+        });
+    </script>
+</body>
+</html>

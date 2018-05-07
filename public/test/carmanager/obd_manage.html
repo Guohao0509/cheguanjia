@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+
+</head>
+<body>
+<div class="admin-main">
+    <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">设备编号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="imei"   placeholder="请输入设备编号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">车牌号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="plateNum"  placeholder="请输入车牌号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">设备类型</label>
+                    <div class="layui-input-inline">
+                        <select name="imeiType">
+                            <option value="999">全部设备类型</option>
+                            <option value="01">标准版</option>
+                            <option value="02">混合版</option>
+                            <option value="03">分时租赁</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">设备版本</label>
+                    <div class="layui-input-inline">
+                        <select name="model">
+                            <option value="999">全部设备版本</option>
+                            <option value="01">V1.0</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">设备状态</label>
+                    <div class="layui-input-inline">
+                        <select name="imeiStatus">
+                            <option value="999">全部设备状态</option>
+                            <option value="1">已绑定</option>
+                            <option value="0">未绑定</option>
+                            <option value="2">故障</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">车辆状态</label>
+                    <div class="layui-input-inline">
+                        <select name="carStatus">
+                            <option value="999">全部车辆状态</option>
+                            <option value="0">未发布</option>
+                            <option value="1">已发布</option>
+                            <option value="2">维修保养</option>
+                            <option value="3">出售报废</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">连接状态</label>
+                    <div class="layui-input-inline">
+                        <select name="OBDStatus">
+                            <option value="999">全部状态</option>
+                            <option value="1">已连接</option>
+                            <option value="0">离线</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small"  id="J_add_button">添加设备</button>
+                </div>
+            </div>
+        </form>
+    </fieldset>
+    <div id="content" style="width: 100%;height: 533px;"></div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable', 'form','laydate','dictionary'], function () {
+        var btable = layui.btable(),
+                $ = layui.jquery,
+                layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+                layer = layui.layer,//获取当前窗口的layer对象;
+                form = layui.form(),
+                dictionary = layui.dictionary();
+        var parmas = {
+            t: new Date().getTime(),
+            operatorId:global.userInfo.operatorId
+        };
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/operation/getOBDList',
+            pageSize: 10,
+            params: parmas,
+            columns: [{
+                fieldName: '设备编号',
+                field: 'imei',
+                sortable: true
+            },{
+                fieldName: '车牌号',
+                field: 'plateNum',
+                sortable: true
+            }, {
+                fieldName: '设备状态',
+                field: 'imeiStatus',
+                format:function(val){
+                    return dictionary.OBD_IMEI_STATUS(val);
+                },
+                sortable: true
+            }, {
+                fieldName: '连接状态',
+                field: 'OBDStatus',
+                sortable: true,
+                format:function(val){
+                    return dictionary.OBD_CONN_STATUS(val);
+                },
+            }, {
+                fieldName: '服务器IP',
+                field: 'ipList',
+            }, {
+                fieldName: '上传间隔(s)',
+                field: 'uploadTime'
+            },
+            {
+                fieldName: '心跳间隔(s)',
+                field: 'heartBeatTime'
+            }, {
+                fieldName: '操作',
+                field: 'id',
+                format: function (val,obj) {
+                    var html = '<input type="button" value="编辑" data-action="edit" data-id="' + val + '" data-imei="'+obj.imei+'" data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-mini" /> ';
+                    return html;
+                }
+            }],
+            even: true,
+            //skin: 'row',
+            checkbox: false,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td:last-child').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        var id = $that.data('id');
+                        var imei = $that.data('imei');
+                        $that.on('click', function () {
+                            var jsonStr = encodeURI($that.attr("data-obj"));
+                            switch (action) {
+                                case 'edit':
+                                    parent.tab.tabAdd({
+                                        href: "obd_edit.html?obdInfo="+jsonStr, //地址
+                                        icon:"fa fa-pencil-square-o",
+                                        title:"obd"+imei
+                                    });
+                                    ;
+                                    break;
+                                case 'del': //删除
+                                    layerTips.msg(action + ":" + id);
+                                    break;
+                            }
+                        });
+                    });
+                });
+            }
+        });
+        btable.render();
+        //监听搜索表单的提交事件
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            btable.get(data.field);
+            return false;
+        });
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+        $("#J_add_button").on('click',function(){
+            parent.tab.tabAdd({
+                href: "obd_add.html", //地址
+                icon:"fa fa-pencil-square-o",
+                title:'设备录入'
+            });
+        });
+
+        $(window).on('resize', function (e) {
+            var $that = $(this);
+            $('#content').height($that.height() - 92);
+        }).resize();
+    });
+</script>
+</body>
+
+</html>

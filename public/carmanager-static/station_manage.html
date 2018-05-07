@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">站点状态</label>
+                    <div class="layui-input-inline">
+                      <select name="staStatus">
+                          <option value="999">全部状态</option>
+                          <option value="0">建设中</option>
+                          <option value="1">使用</option>
+                          <option value="2">停用</option>
+                      </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">站点类型</label>
+                    <div class="layui-input-inline">
+                        <select name="dutyType">
+                            <option value="999">全部类型</option>
+                            <option value="0">有人值守</option>
+                            <option value="1">无人值守</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">有无可用车</label>
+                    <div class="layui-input-inline">
+                        <select name="idleCarNum">
+                            <option value="-1">全部类型</option>
+                            <option value="1">有可用车</option>
+                            <option value="0">无可用车</option>
+                        </select>
+                    </div>
+                </div>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small" id="J_add_button">添加站点</button>
+                </div>
+                 <div class="layui-inline" id="export_select">
+
+                </div>
+                 <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="export_info" >导出信息</button>
+                </div>
+
+            </div>
+        </form>
+    </fieldset>
+    <div id="content" style="width: 100%;height: 533px;"></div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable', 'form','laydate','ajax','dictionary'], function () {
+        var btable = layui.btable(),
+                $ = layui.jquery,
+                layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+                form = layui.form(),
+                ajax = layui.ajax(),
+                dictionary = layui.dictionary();
+       
+        var parmas = {
+            t: new Date().getTime(),
+            operatorId:global.userInfo.operatorId
+        };
+
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+      
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/trade/getRcStationList',
+            pageSize: 10,
+            params: parmas,
+            columns: [{
+                fieldName: '站点名称',
+                field: 'staName'
+            },{
+                fieldName: '站点所在区域',
+                field: 'districtName'
+
+            },{
+                fieldName: '站点状态',
+                field: 'staStatus',
+                format:function(val){
+                    return dictionary.STATION_STATUS(val);
+                }
+            },
+             {
+                    fieldName: '站点类型',
+                    field: 'dutyType',
+                   format:function(val){
+                     return dictionary.STATION_DUTY_TYPE(val);
+                   }
+             },
+               {
+                fieldName: '汽车数量',
+                field: 'carNum'
+             }, {
+                    fieldName: '停车位数量',
+                    field: 'parkingNum'
+                },{
+                    fieldName: '可用车辆数量',
+                    field: 'idleCarNum'
+                },
+                {
+                    fieldName: '投入使用时间',
+                    field: 'openDate'
+                },
+                {
+                    fieldName: '营业时间',
+                    field: 'serviceTime'
+                },
+                {
+                    fieldName: '工作制',
+                    field: 'staHoliday',
+                    format:function(val){
+                        return dictionary.STATION_HOLIDAY(val);
+                    }
+                },
+                {
+                fieldName: '操作',
+                field: 'stationId',
+                format: function (val,obj) {
+                    var html ='<input type="button" value="编辑" data-action="edit" data-id="' + val + '" data-platenum="'+obj.plateNum+'编辑" data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-mini" />';
+                    return html;
+                }
+            }],
+            even: true,
+            //skin: 'row',
+            checkbox: false,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td:last-child').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        $that.on('click', function () {
+                            var obj=JSON.parse($that.attr("data-obj"));
+                            var jsonStr =encodeURI(JSON.stringify(obj));
+                            switch (action) {
+                                case 'edit':
+                                    parent.tab.tabAdd({
+                                        href: 'station_edit.html?stationInfo='+jsonStr, //地址
+                                        icon:"fa fa-pencil-square-o",
+                                        title:"编辑区域"
+                                    });
+                                    break;
+                                case 'del': //删除
+                                    layer.confirm("确认要删除吗?", { title: "删除确认" }, function (index) {
+                                        layer.close(index);
+                                            ajax.post(global.host+"api/operation/doDeleteArea.htm",{areaId:data.areaId, operatorId:global.userInfo.operatorId},function(data){
+                                                $that.parent().parent().remove();
+                                                layer.msg("删除成功");
+                                            });
+                                    });
+                                    break;
+                            }
+                        });
+                    });
+                });
+            }
+        
+        });
+        
+        btable.render();
+        //监听搜索表单的提交事件
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            btable.get(data.field);
+            return false;
+        });
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+       
+        $("#J_add_button").on('click',function(){
+            parent.tab.tabAdd({
+                href: "station_add.html", //地址
+                icon:"&#xe654;",
+                title:'添加站点'
+            });
+        });
+        $(window).on('resize', function (e) {
+            var $that = $(this);
+            $('#content').height($that.height() - 92);
+        }).resize();
+
+        //导出信息
+        $("#export_info").on("click",function(){
+        	var title="&&title=";//标题
+        	var titles=$(".layui-table").find("th");
+        	var limit_select=$('select[name="limit_select"]').val().split(",");
+        	var start="&&start="+limit_select[0];//开始条数
+        	var limit="&&limit="+limit_select[1];//
+        	for(var i=1;i<titles.length-1;i++){
+        		if(titles[i].innerHTML.indexOf("<")!=-1){
+        			title+=titles[i].innerHTML.substr(0,titles[i].innerHTML.indexOf("<"))+",";
+        		}else{
+        			title+=titles[i].innerHTML+",";
+        		}        		    
+        	}
+        	title=title.substr(0,title.length-1); 
+        	var param="";//导出条件
+        	$("#J_search_form").find("input[name],select[name]").each(function(){
+        		param+="&&"+$(this).attr("name")+"="+$(this).val();
+        	});
+        	var url=global.host+"api/util/export_to_xls?operatorId="+global.userInfo.operatorId+"&&sql=RcStation"+title+start+param+limit;
+        	window.location.href=url;        	
+        });
+    });
+
+</script>
+</body>
+
+</html>

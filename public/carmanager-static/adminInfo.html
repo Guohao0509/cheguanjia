@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>用户信息</title>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="format-detection" content="telephone=no">
+	<link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+	<link rel="stylesheet" href="css/user.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body class="childrenBody">
+	<form class="layui-form" id="J_edit_form">
+		
+	</form>
+	<script type="text/html" id="J_edit_form_tpl">
+       <div class="user_left">
+			<div class="layui-form-item">
+			    <label class="layui-form-label">运营商ID</label>
+			    <div class="layui-input-block">
+			    	<input type="text" value="{{d.systemUser.operatorId}}" disabled class="layui-input layui-disabled">
+			    </div>
+			</div>
+            <div class="layui-form-item">
+			    <label class="layui-form-label">企业名称</label>
+			    <div class="layui-input-block">
+			    	<input type="text" name="companyName"  value="{{d.operator.companyName}}" lay-verify="required" placeholder="请输入企业名称"  class="layui-input">
+			    </div>
+			</div>
+              <div class="layui-form-item">
+			    <label class="layui-form-label">企业地址</label>
+			    <div class="layui-input-block">
+			    	<input type="text" name="companyAddr" value="{{d.operator.companyAddr}}" lay-verify="required" placeholder="请输入企业地址"  class="layui-input">
+			    </div>
+			</div>
+            <div class="layui-form-item">
+			    <label class="layui-form-label">企业电话</label>
+			    <div class="layui-input-block">
+			    	<input type="text" name="phone" value="{{d.operator.phone}}" lay-verify="required" placeholder="请输入企业电话"  class="layui-input">
+			    </div>
+			</div>
+            <div class="layui-form-item">
+			    <label class="layui-form-label">应用方式</label>
+			    <div class="layui-input-block">
+			    	<input type="text" value="{{dictionary.APPLY_TYPE(d.operator.applyType)}}" disabled class="layui-input layui-disabled">
+			    </div>
+			</div>
+            <div class="layui-form-item">
+			    <label class="layui-form-label">运营商类型</label>
+			    <div class="layui-input-block">
+			    	<input type="text" value="{{dictionary.OPERATOR_TYPE(d.operator.operatorType)}}" disabled class="layui-input layui-disabled">
+			    </div>
+			</div>
+           <div class="layui-form-item">
+			    <label class="layui-form-label">用户名</label>
+			    <div class="layui-input-block">
+			    	<input type="text" name="nickName" value="{{d.systemUser.nickName}}" placeholder="请输入用户名" lay-verify="required" class="layui-input">
+			    </div>
+			</div>
+			
+			<div class="layui-form-item">
+			    <label class="layui-form-label">登录密码</label>
+			    <div class="layui-input-inline">
+                 <input type="password" id="pwd" name="password" value="{{global.userInfo.password}}" required lay-verify="required" disabled autocomplete="off" class="layui-input layui-disabled">                    
+                </div>
+                  <img src="images/yes_eye.png" width="30px" height="22px" title="查看密码" id="show_pwd" style="cursor:pointer;margin-right:10px;">
+                  <button type="button" class="layui-btn layui-btn-small" id="edit_pwd">修改密码</button>
+			      
+               </div>
+               <div class="reset">
+               <div class="layui-form-item">
+                 <label class="layui-form-label">新密码</label>
+			     <div class="layui-input-inline">
+                      <input type="password" id="new_pwd" name="password"  lay-verify=""  autocomplete="off" class="layui-input">
+                 </div>
+                </div>
+                <div class="layui-form-item">
+                <label class="layui-form-label">确认新密码</label>
+			     <div class="layui-input-inline">
+                   <input type="password" id="repeat_pwd" name="password"   lay-verify=""  autocomplete="off" class="layui-input">
+                 </div>
+                   <label id="pwd_hint">两次密码输入不一致</label>
+                </div>
+              </div>
+			<div class="layui-form-item">
+			    <label class="layui-form-label">手机号</label>
+			    <div class="layui-input-block">
+			    	<input type="text" name="mobile" value="{{d.systemUser.mobile}}" lay-verify="required|phone" placeholder="请输入手机号"  class="layui-input">
+			    </div>
+			</div>
+		    <div class="layui-form-item">
+			    <label class="layui-form-label">登陆名</label>
+			    <div class="layui-input-block">
+			    	<input type="text" name="userName" value="{{d.systemUser.userName}}" disabled  lay-verify="required" class="layui-input layui-disabled">
+			    </div>
+			</div>
+			<div class="layui-form-item">
+			    <label class="layui-form-label">邮箱</label>
+			    <div class="layui-input-block">
+			    	<input type="text" name="email" value="{{d.systemUser.email}}" placeholder="请输入邮箱" lay-verify="required|email" class="layui-input">
+			    </div>
+			</div>
+			 <div class="layui-form-item">
+			    <label class="layui-form-label">上次登陆时间</label>
+			    <div class="layui-input-block">
+			    	<input type="text" value="{{d.systemUser.lastLoginTime}}" disabled class="layui-input layui-disabled">
+			    </div>
+			</div>
+		</div>
+		<div class="user_right">
+             <div>
+              <input type="file" name="upfile"  id="logo" class="layui-upload-file" lay-title="修改头像">
+             </div>		
+			<img src="{{d.systemUser.logo}}" class="layui-circle" id="userFace">
+            <input type="hidden" name="logo" id="logo_val" value="{{d.systemUser.logo}}">
+		</div>
+		<div class="layui-form-item" style="margin-left: 5%;">
+		    <div class="layui-input-block">
+		    	<button class="layui-btn" lay-submit="" lay-filter="change_sys">立即提交</button>
+				<button type="reset"  class="layui-btn layui-btn-primary">重置</button>
+		    </div>
+		</div>
+     </script>
+	<script type="text/javascript" src="plugins/layui/layui.js"></script>
+	<script type="text/javascript">
+	var global=window.parent.global;
+	layui.config({
+		base : "js/"
+	}).use(['form','ajax','layer','upload','dictionary','laydate','laytpl'],function(){
+		var form = layui.form();
+		var layer = parent.layer === undefined ? layui.layer : parent.layer;
+	    var $ = layui.jquery;
+	    var $form = $('form');
+	    var ajax=layui.ajax();
+	    window.dictionary = layui.dictionary();			
+		  var laytpl = layui.laytpl;
+			 //编辑模版
+	      var editFormTpl = document.getElementById("J_edit_form_tpl").innerHTML;		
+	      var sysUserId=global.userInfo.sysUserId;
+	     $.post(global.host+"api/system/getSysUserDetail.htm",{"sysUserId":sysUserId},function(result){
+	    	 var data=result.data;
+	    	 document.getElementById("J_edit_form").innerHTML = laytpl(editFormTpl).render(data);
+	    	 //文件上传
+	    	 layui.upload({
+	     	     elem:"#logo",
+	     	     url : global.host+"api/util/uploadByStream",
+	     	     success: function(res){
+	     		   $("#userFace").attr("src",res.data);
+	     		   $("#logo_val").val(res.data);
+                   $("#logo",window.parent.document).attr("src",res.data);
+			     }
+	          });
+	    	 $("#show_pwd").on("click",function(){
+	    		var pwd=$(this).parent().find("input");
+	    		var pwd_attr=pwd.attr("type");
+	    		if(pwd_attr=="text"){
+	    			pwd.attr("type","password");
+	    			$(this).attr({"src":"images/yes_eye.png","title":"查看密码"});
+	    		}else{
+	    			pwd.attr("type","text");
+	    			$(this).attr({"src":"images/no_eye.png","title":"隐藏密码"});
+	    		}
+	  	    });
+	    	 $("#edit_pwd").on("click",function(){
+	    		 $("#new_pwd").attr("lay-verify","required");
+	             $("#repeat_pwd").attr("lay-verify","required");
+	    		 $(".reset").slideDown();
+	    	 });
+	    	   form.on('submit(change_sys)',function(data){
+	    		   var new_pwd=$("#new_pwd").val();
+	    		   var repeat_pwd=$("#repeat_pwd").val();
+	    		   if(new_pwd!=repeat_pwd){
+	    			   return false;
+	    		   }else{
+	    			   $("#pwd").val(repeat_pwd);
+	    			   $.extend(true, data.field,{operatorId:global.userInfo.operatorId,sysUserId:sysUserId});
+		               ajax.post(
+		                       global.host+"api/system/doUpdateSysUser.htm",data.field,function(){
+		                    	   window.parent.layer.msg("信息修改成功");
+		                    	   window.location.reload();	                           
+		                       }); 
+		                 return false;
+	    		   }
+	           });
+	    	   $("#repeat_pwd").on("change",function(){
+	    		   var new_pwd=$("#new_pwd").val();
+	    		   var repeat_pwd=$(this).val();
+	    		   if(new_pwd!=repeat_pwd){
+	    			   $("#pwd_hint").show();
+	    		   }else{
+	    			   $("#pwd_hint").hide()
+	    		   }
+	    	   });
+	    	   $("#new_pwd").on("change",function(){
+	    		   var new_pwd=$(this).val();
+	    		   var repeat_pwd=$("#repeat_pwd").val();
+	    		   if(repeat_pwd!=""){
+	    			   if(new_pwd!=repeat_pwd){
+		    			   $("#pwd_hint").show();
+		    		   }else{
+		    			   $("#pwd_hint").hide();
+		    		   } 
+	    		   }else{
+	    			   $("#pwd_hint").hide()
+	    		   }
+	    	   });
+	    	   $('button[type="reset"]').on('click',function(){
+	    		     var new_pwd=$("#new_pwd").val();
+		    		 var repeat_pwd=$("#repeat_pwd").val();
+		    		 $("#pwd").attr("type","password");
+		    		 $("#show_pwd").attr({"src":"images/yes_eye.png","title":"查看密码"});
+	      	         if(new_pwd==""&&repeat_pwd==""){
+	      	        	 $(".reset").slideUp();
+	      	        	 $("#pwd_hint").hide();
+			    		 $("#new_pwd").attr("lay-verify","");
+			             $("#repeat_pwd").attr("lay-verify","");
+	      	         } 
+	    	   });
+	    	    
+	     });  
+	    
+	})
+	</script>
+	
+</body>
+</html>

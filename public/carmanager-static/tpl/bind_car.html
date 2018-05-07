@@ -1,0 +1,29 @@
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space20" style="margin: 20px 0;">
+        <div class="layui-col-md3 carAddCoupon">
+            <div class="coupon-wrapper" style="height:260px;">
+                <div class="coupon-add-icon" style="margin: 33px 0;">+</div>
+                <a class="coupon-add-btn">添加车辆</a>
+            </div>
+        </div>
+        {{#  layui.each(d.rows, function(index, item){ }}
+        <div class="layui-col-md3">
+            <div class="coupon-wrapper" style="height: 260px;" style="height:auto;">
+                <div>
+                    <img src="./images/{{ item.photo }}" style="width: 100%; margin-bottom: 8px;">
+                </div>
+                <div style="font-size: 12px; line-height: 17px;">
+                    <span style="font-size: 15px; font-weight: bold;">{{ item.plateNum }}</span><br/>
+                    {{ item.stationName }}<br/>
+                    <span>{{ item.brand }}{{ item.model }}</span>&nbsp;&nbsp;&nbsp;
+                    <span>{{ item.carsitNum }}座</span>&nbsp;&nbsp;&nbsp;
+                    <span>{{ item.currentElectricity }}%电量</span>
+                </div>
+                <div class="coupon-button">
+                    <div data-id='{{ item.carId }}' class="layui-btn layui-btn-mini layui-btn-danger deleteCar" style="width:80px;">删除</div>
+                </div>
+            </div>
+        </div>
+        {{#  }); }}
+    </div>
+</div>                 

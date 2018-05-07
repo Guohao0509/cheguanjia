@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <form class="layui-form">
+        <fieldset class="layui-elem-field">
+            <legend>添加obd设备</legend>
+            <div class="layui-field-box">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">设备编号</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="imei"   placeholder="请输入设备编号" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">SIM卡号</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="mobile"  placeholder="请输入SIM卡号" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">车牌号</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="plateNum"   placeholder="为空则表示不和车辆绑定" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">服务器IP</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="ipList"   placeholder="请输入车牌号" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">上传间隔</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="uploadTime"   placeholder="数据上传间隔时间" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">心跳间隔</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="heartBeatTime"   placeholder="心跳维持间隔时间" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">设备类型</label>
+                        <div class="layui-input-inline">
+                            <select name="imeiType" lay-verify="required">
+                                <option value="">请选择设备类型</option>
+                                <option value="010">分时租赁</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">设备版本</label>
+                        <div class="layui-input-inline">
+                            <select name="imeiVersion" lay-verify="required">
+                                <option value="">请选择设备版本</option>
+                                <option value="999">V1.0</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">安装时间</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="instalTime" lay-verify="required" placeholder="yyyy-MM-dd"  autocomplete="off" class="layui-input" onclick="layui.laydate({elem: this})">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">设备状态</label>
+                        <div class="layui-input-inline">
+                            <select name="imeiStatus" lay-verify="required">
+                                <option value="">请选择设备状态</option>
+                                <option value="1">已启用</option>
+                                <option value="0">未启用</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">备注</label>
+                        <div class="layui-input-inline" style="width: 504px;">
+                            <input type="text"   placeholder="备注信息" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+            <div class="layui-inline">
+                <button type="button" class="layui-btn layui-btn-small" lay-submit="" lay-filter="obd_add">提交</button>
+            </div>
+            <div class="layui-inline">
+                <button type="reset" class="layui-btn layui-btn-primary layui-btn-small" >重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','laydate','upload','ajax'], function (){
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+        form.on('submit(obd_add)',function(data){
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            ajax.post(
+                    global.host+"api/operation/doAddOBDCar.htm",data.field,function(){
+                        window.location.reload();
+                        window.parent.layer.alert("OBD添加成功");
+                    });
+            return false;
+        });
+    });
+</script>
+</body>
+
+</html>

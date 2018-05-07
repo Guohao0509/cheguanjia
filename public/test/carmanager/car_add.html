@@ -1,0 +1,221 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <form class="layui-form">
+        <!--由于数据模型变更，这里的一些数据默认固定值，用隐藏域提交-->
+        <input type="hidden" name="city" value="默认">
+        <input type="hidden" name="rentPrice" value="0">
+        <input type="hidden" name="maxDayFee" value="0">
+        <input type="hidden" name="rentPriceMinute" value="0">
+        <input type="hidden" name="licensPhoto" value="无">
+        <input type="hidden" name="rentPriceNight" value="0">
+        <input type="hidden" name="minRentPrice" value="0">
+        <fieldset class="layui-elem-field">
+            <legend>基础信息</legend>
+            <div class="layui-field-box">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">车牌号</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="plateNum"   placeholder="请输入车牌号不要有空格" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">品牌型号</label>
+                        <div class="layui-input-inline">
+                            <select name="carRuleName" id="J_brand" lay-verify="required">
+                                <option value="">请选择品牌型号</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">能源类型</label>
+                        <div class="layui-input-inline">
+                            <select name="model" lay-verify="required">
+                                <option value="">请选择能源类型</option>
+                                <option value="999">电动</option>
+                                <option value="010">油动</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">车架号</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="vin" lay-verify="required"  placeholder="请输入车架号" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">发动机号</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="engineNumber" lay-verify="required"  placeholder="请输入发动机号" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">当前公里数</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="currentKM"  lay-verify="required"  placeholder="请输入当前公里数" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">购买日期</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="intoServTime" lay-verify="required" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input" onclick="layui.laydate({elem: this})">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">车辆类型</label>
+                        <div class="layui-input-inline">
+                            <select name="model" lay-verify="required">
+                                <option value="">请选择车辆类型</option>
+                                <option value="999">自购车辆</option>
+                                <option value="010">长期挂靠</option>
+                                <option value="010">零时托管</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">车辆状态</label>
+                        <div class="layui-input-inline">
+                            <select name="model" lay-verify="required">
+                                <option value="">请选择车辆状态</option>
+                                <option value="999">上线</option>
+                                <option value="010">下线</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">车辆组</label>
+                        <div class="layui-input-inline">
+                            <select name="carGroupId" id="J_carGroupId" lay-verify="required">
+                                <option value="">请选择车辆组</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label required">车辆权属</label>
+                        <div class="layui-input-inline">
+                            <input type="text" lay-verify="required"  placeholder="请输入车辆权属" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">备注</label>
+                        <div class="layui-input-inline" style="width: 504px;">
+                            <input type="text"   placeholder="备注信息" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="layui-elem-field">
+            <legend>上传信息</legend>
+            <div class="layui-field-box">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">车辆外观</label>
+                        <div class="layui-input-inline">
+                            <input type="file"   class="layui-upload-file">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">行车证照片</label>
+                        <div class="layui-input-inline">
+                            <input type="file"   class="layui-upload-file">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="layui-elem-field">
+            <legend>维护信息</legend>
+            <div class="layui-field-box">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">年检日期</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="price_min" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input" onclick="layui.laydate({elem: this})">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">续保日期</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="price_min" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input" onclick="layui.laydate({elem: this})">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="layui-form-label">保养周期</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="price_min" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input" onclick="layui.laydate({elem: this})">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+            <div class="layui-inline">
+                <button type="button" class="layui-btn layui-btn-small" lay-submit="" lay-filter="car_add">提交</button>
+            </div>
+            <div class="layui-inline">
+                <button type="reset" class="layui-btn layui-btn-primary layui-btn-small" >重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','laydate','upload','ajax'], function (){
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+        var carRuleList = global.userInfo.carRuleList;
+        //异步渲染select
+        for (var i = 0; i < carRuleList.length; i++) {
+            $("#J_brand").append("<option value=" + carRuleList[i] + ">" +carRuleList[i] + "</option>");
+        }
+        ajax.post(
+                global.host+"api/operator/getCarGroupList.htm",{
+                    operatorId: global.userInfo.operatorId,
+                    carGroupName:''
+                },function(data){
+                    for (var i = 0; i < data.rows.length; i++) {
+                        $("#J_carGroupId").append("<option value=" + data.rows[i].carGroupId + ">" +data.rows[i].carGroupName + "</option>");
+                    }
+                    form.render();
+                });
+        //文件上传插件初始化
+        layui.upload({
+            url: global.host+"api/util/uploadByStream"
+            ,success: function(res){
+                console.log(res); //上传成功返回值，必须为json格式
+            }
+        });
+        form.on('submit(car_add)',function(data){
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            ajax.post(
+                    global.host+"api/operation/doAddCar.htm",data.field,function(){
+                        window.location.reload();
+                        window.parent.layer.alert("车辆添加成功");
+                    });
+            return false;
+        });
+    });
+</script>
+</body>
+
+</html>

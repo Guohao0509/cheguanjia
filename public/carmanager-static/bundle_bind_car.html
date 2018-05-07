@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+    <script src="js/layui-xtree.js"></script>
+    <style type="text/css">
+        .elect_alram{float: right;}
+        .bundle-active {
+          display: block;
+        }
+        .bundle-none {
+          display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-tab layui-tab-brief">
+    <div class="panel_icon">
+
+    </div>
+    <ul class="layui-tab-title">
+        <li class="layui-this" action="bindByStation">按站点绑定</li>
+        <li action="bindByCar">按车辆绑定</li>
+    </ul>
+</div>
+<div class="admin-main bindByStation">
+  <form class="layui-field-box layui-form" id="J_search_form">
+      <div class="layui-form-item">
+          <div class="layui-inline">
+              <label class="layui-form-label">选择车型</label>
+              <div class="layui-input-inline">
+                  <select name="stationId" id="station">
+                      <option value="0">全部</option>
+                      <option value="1">江淮IEV5</option>
+                      <option value="2">江淮IEV6E</option>
+                  </select>
+              </div>
+          </div>
+      </div>
+  </form>
+  <form class="layui-field-box layui-form" id="tree_form">
+    <div id="treeContent" style="width: 100%;height: 533px;"></div>
+  </form>
+</div>
+<div class="admin-main bundle-none layui-row bindByCar layui-col-space30">
+    <div class="layui-col-md6">
+      <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">车牌号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="plateNum"   placeholder="请输入车牌号不要有空格" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">品牌</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="brand"   placeholder="如江淮" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">型号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="model"   placeholder="如IEV" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">所属站点</label>
+                    <div class="layui-input-inline">
+                        <select name="stationId" id="station">
+                            <option value="">全部站点</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                
+                  <div class="layui-inline" id="export_select">
+                      
+                </div>
+            </div>
+        </form>
+      </fieldset>
+      <div id="content" style="width: 100%;height: 533px;"></div>
+    </div>
+    <div class="layui-form layui-col-md6">
+      <table class="layui-table" style="margin-bottom: 0px;">
+        <colgroup>
+          <col width="50">
+          <col width="150">
+          <col width="150">
+          <col width="200">
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th style="border-bottom: 0;"><input type="checkbox" name="" lay-skin="primary" lay-filter="allChoose"></th>
+            <th style="border-bottom: 0;">车牌号</th>
+            <th style="border-bottom: 0;">品牌</th>
+            <th style="border-bottom: 0;">型号</th>
+            <th style="border-bottom: 0;">所属站点</th>
+          </tr> 
+        </thead>
+      </table>
+      <div class="table" style="max-height: 460px;overflow-y: scroll;">
+          <table class="layui-table" style="margin-top: 0px;">
+              <colgroup>
+                <col width="50">
+                <col width="150">
+                <col width="150">
+                <col width="200">
+                <col>
+              </colgroup>
+              
+              <tbody id="todoList">
+                
+              </tbody>
+            </table>
+      </div>
+    </div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script type="text/html" id="todoListTpl">
+  {{#  layui.each(d, function(index, item){ }}
+    <tr>
+      <td><input type="checkbox" name="" lay-skin="primary"></td>
+      <td>{{item.plateNum}}</td>
+      <td>{{item.brand}}</td>
+      <td>{{item.model}}</td>
+      <td>{{item.stationName}}</td>
+    </tr>
+  {{#  }); }}
+</script>
+<script>
+    var global = window.parent.global;
+    global = {};
+    global.host = 'localhost:3000/'
+    global.userInfo  = {}
+    global.userInfo.operatorId = '11111'
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable', 'form','laydate','ajax','dictionary','laytpl'], function () {
+        var btable = layui.btable(),
+                $ = layui.jquery,
+                layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+                form = layui.form(),
+                ajax = layui.ajax(),
+                dictionary = layui.dictionary(),
+                laytpl = layui.laytpl;
+       
+        var parmas = {
+            t: new Date().getTime(),
+            // operatorId:global.userInfo.operatorId
+        };
+        var json = [
+            {
+                title: "节点1", value: "jd1", data: [
+                { title: "节点1.1", checked: true, disabled: true, value: "jd1.1", data: [] }
+                , { title: "节点1.2", value: "jd1.2", checked: true, data: [] }
+                , { title: "节点1.3", value: "jd1.3", disabled: true, data: [] }
+                , { title: "节点1.4", value: "jd1.4", data: [] }
+                ]
+            }
+          , {
+                title: "节点2", value: "jd2", data: [
+                { title: "节点2.1", value: "jd2.1", data: [] }
+                , { title: "节点2.2", value: "jd2.2", data: [] }
+                , { title: "节点2.3", value: "jd2.3", data: [] }
+                , { title: "节点2.4", value: "jd2.4", data: [] }
+                ]
+            }
+            , { title: "节点3", value: "jd3", data: [] }
+            , { title: "节点4", value: "jd4", data: [] }
+        ]
+        var xtree = new layuiXtree({
+            elem: 'treeContent',
+            form: form,
+            data: json,              //数据，结构请参照下面 （必填）
+            isopen: true,            //初次加载时全部展开，默认true （选填）
+            color: "#000",           //图标颜色 （选填）
+            icon: {                 //图标样式 （选填）
+              open: "&#xe624;",     //节点打开的图标
+              close: "&#xe622;",   //节点关闭的图标
+              end: "&#xe621;"     //末尾节点的图标
+            }
+        });var $ = layui.jquery, form = layui.form();
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+        $('.layui-tab-title li').on('click', function (e) {
+          var action = $(e.target).attr('action');
+          $('.' + action).show().siblings('.admin-main').hide();
+        })
+        $("#station").empty();
+        $("#station").append("<option value=\"999\">全部站点</option>");
+        ajax.post( global.host+"api/trade/getCarstationList.htm",{
+            operatorId: global.userInfo.operatorId,
+        },function(data){
+            for (var i = 0; i < data.length; i++) {
+                $("#station").append("<option value="+ data[i].stationId+">" +data[i].staName + "</option>");
+            }
+            form.render();
+        });
+        var result = {"code":0,"data":{"count":21,"rows":[{"carId":"201801121500224013207738381","stationId":"","stationName":"合康变频","brand":"江淮","model":"IEV5","color":"白色","plateNum":"鄂A404EZ","city":"武汉市","carOwner":"武汉市畅的科技有限公司","photo":"IEV5.png","currentKM":0.0,"ownerShip":0,"intoServTime":"2018-01-12 00:00:00","milesRange":200.0,"rentStatus":0,"rentPrice":15.0,"maxDayFee":120.0,"plugType":0,"carType":0,"vin":"无","startKilo":0.0,"powerType":0,"transMissionType":0,"engineNumber":"无","maxSpeed":120.0,"buyDate":"","hasTrunk":0,"rentPriceMinute":0.3,"licensePhoto":"","rentPriceNight":60.0,"annualSurvey":"","maintenaceCycle":"","minRentPrice":9.0,"maintenaceKilo":0.0,"rentStartKilo":0.0,"remark":"","nextMiKilo":0.0,"tripMileage":63360.0,"maintenanceCount":0,"carStatus":0,"longitude":114.4674,"latitude":30.469104,"carPosition":"湖北省武汉市江夏区佛祖岭街道佛祖岭三路","currentSpeed":0.0,"travelDir":0,"currentElectricity":0.0,"chargeStatus":0,"cruisingDistance":0.0,"powerAlarmStatus":2,"travelStatus":0,"workStatus":2,"recordTime":"2018-01-15 18:51:17","gpsRecordTime":"2018-01-15 18:51:12","carGroupName":"分时租赁","maintPeriod":"","showImage":"","statistics":0},{"carId":"201801121353468138573708859","stationId":"","stationName":"合康变频","brand":"江淮","model":"IEV5","color":"白色","plateNum":"鄂A567GZ","city":"武汉市","carOwner":"武汉市畅的科技有限公司","photo":"IEV5.png","currentKM":0.0,"ownerShip":0,"intoServTime":"2018-01-12 00:00:00","milesRange":200.0,"rentStatus":0,"rentPrice":15.0,"maxDayFee":120.0,"plugType":0,"carType":0,"vin":"无","startKilo":0.0,"powerType":0,"transMissionType":0,"engineNumber":"无","maxSpeed":120.0,"buyDate":"","hasTrunk":0,"rentPriceMinute":0.3,"licensePhoto":"","rentPriceNight":60.0,"annualSurvey":"","maintenaceCycle":"","minRentPrice":9.0,"maintenaceKilo":0.0,"rentStartKilo":0.0,"remark":"","nextMiKilo":0.0,"tripMileage":41849.0,"maintenanceCount":0,"carStatus":0,"longitude":114.46704,"latitude":30.469044,"carPosition":"湖北省武汉市江夏区佛祖岭街道佛祖岭三路6号5栋","currentSpeed":2.0,"travelDir":0,"currentElectricity":15.0,"chargeStatus":0,"cruisingDistance":30.0,"powerAlarmStatus":2,"travelStatus":1,"workStatus":2,"recordTime":"2018-01-15 18:50:55","gpsRecordTime":"2018-01-15 18:50:50","carGroupName":"分时租赁","maintPeriod":"","showImage":"","statistics":0},{"carId":"201708231712045372727804333","stationId":"","stationName":"","brand":"江淮","model":"iEV5","color":"白色","plateNum":"鄂A33333","city":"武汉市","carOwner":"武汉市畅的科技有限公司","photo":"IEV5.png","currentKM":0.0,"ownerShip":0,"intoServTime":"2015-10-22 00:00:00","milesRange":200.0,"rentStatus":0,"rentPrice":0.0,"maxDayFee":0.0,"plugType":0,"carType":0,"vin":"01a1     ","startKilo":0.0,"powerType":0,"transMissionType":0,"engineNumber":"a222       ","maxSpeed":120.0,"buyDate":"2017-08-02 00:00:00","hasTrunk":0,"rentPriceMinute":0.0,"licensePhoto":"","rentPriceNight":0.0,"annualSurvey":"default","maintenaceCycle":"default","minRentPrice":0.0,"maintenaceKilo":0.0,"rentStartKilo":0.0,"remark":"","nextMiKilo":0.0,"tripMileage":0.0,"maintenanceCount":0,"carStatus":0,"longitude":114.466888,"latitude":30.469306,"carPosition":"湖北省武汉市江夏区佛祖岭街道佛祖岭三路","currentSpeed":0.0,"travelDir":0,"currentElectricity":0.0,"chargeStatus":0,"cruisingDistance":0.0,"powerAlarmStatus":2,"travelStatus":0,"workStatus":2,"recordTime":"2017-09-12 09:59:09","gpsRecordTime":"2017-09-04 16:18:30","carGroupName":"分时租赁","maintPeriod":"default","showImage":"","statistics":0},{"carId":"201708231712045372727810002","stationId":"","stationName":"合康变频","brand":"江淮","model":"iEV5","color":"白色","plateNum":"鄂A33U55","city":"武汉市","carOwner":"武汉市畅的科技有限公司","photo":"IEV5.png","currentKM":123.0,"ownerShip":0,"intoServTime":"2015-10-22 00:00:00","milesRange":200.0,"rentStatus":0,"rentPrice":0.0,"maxDayFee":0.0,"plugType":0,"carType":0,"vin":"qwq     ","startKilo":0.0,"powerType":0,"transMissionType":0,"engineNumber":"111    ","maxSpeed":120.0,"buyDate":"2017-11-01 00:00:00","hasTrunk":0,"rentPriceMinute":0.0,"licensePhoto":"","rentPriceNight":0.0,"annualSurvey":"default","maintenaceCycle":"default","minRentPrice":0.0,"maintenaceKilo":0.0,"rentStartKilo":0.0,"remark":"不错","nextMiKilo":0.0,"tripMileage":3098.0,"maintenanceCount":0,"carStatus":5,"longitude":114.46724,"latitude":30.46921,"carPosition":"湖北省武汉市江夏区佛祖岭街道佛祖岭三路","currentSpeed":0.0,"travelDir":0,"currentElectricity":81.0,"chargeStatus":0,"cruisingDistance":162.0,"powerAlarmStatus":2,"travelStatus":0,"workStatus":2,"recordTime":"2017-12-06 08:49:45","gpsRecordTime":"2017-11-09 16:31:36","carGroupName":"分时租赁","maintPeriod":"default","showImage":"","statistics":0},{"carId":"201708020921027456782540577","stationId":"","stationName":"合康变频","brand":"江淮","model":"iEV5","color":"白色","plateNum":"鄂AC4D31","city":"武汉市","carOwner":"武汉市畅的科技有限公司","photo":"IEV5.png","currentKM":0.0,"ownerShip":0,"intoServTime":"2015-10-22 00:00:00","milesRange":200.0,"rentStatus":0,"rentPrice":15.0,"maxDayFee":120.0,"plugType":0,"carType":0,"vin":"     ","startKilo":0.0,"powerType":0,"transMissionType":0,"engineNumber":"       ","maxSpeed":120.0,"buyDate":"2017-08-02 00:00:00","hasTrunk":0,"rentPriceMinute":0.3,"licensePhoto":"","rentPriceNight":60.0,"annualSurvey":"default","maintenaceCycle":"default","minRentPrice":9.0,"maintenaceKilo":0.0,"rentStartKilo":0.0,"remark":"","nextMiKilo":0.0,"tripMileage":42936.0,"maintenanceCount":0,"carStatus":0,"longitude":114.467464,"latitude":30.469164,"carPosition":"湖北省武汉市江夏区佛祖岭街道佛祖岭三路","currentSpeed":2.0,"travelDir":0,"currentElectricity":72.0,"chargeStatus":0,"cruisingDistance":144.0,"powerAlarmStatus":2,"travelStatus":1,"workStatus":2,"recordTime":"2018-01-15 18:50:40","gpsRecordTime":"2018-01-15 18:50:35","carGroupName":"分时租赁","maintPeriod":"default","showImage":"","statistics":0},{"carId":"201708231712045372727807777","stationId":"","stationName":"","brand":"江淮","model":"iEV5","color":"白色","plateNum":"皖AA7997","city":"石家庄市","carOwner":"武汉市畅的科技有限公司","photo":"IEV5.png","currentKM":0.0,"ownerShip":0,"intoServTime":"2015-10-22 00:00:00","milesRange":200.0,"rentStatus":0,"rentPrice":0.0,"maxDayFee":0.0,"plugType":0,"carType":1,"vin":"     0000000","startKilo":0.0,"powerType":2,"transMissionType":0,"engineNumber":"000000       ","maxSpeed":120.0,"buyDate":"2017-08-02 00:00:00","hasTrunk":0,"rentPriceMinute":0.0,"licensePhoto":"","rentPriceNight":0.0,"annualSurvey":"default","maintenaceCycle":"default","minRentPrice":0.0,"maintenaceKilo":0.0,"rentStartKilo":0.0,"remark":"","nextMiKilo":0.0,"tripMileage":195.0,"maintenanceCount":0,"carStatus":5,"longitude":114.46676,"latitude":30.469234,"carPosition":"湖北省武汉市江夏区佛祖岭街道佛祖岭三路6号5栋","currentSpeed":0.0,"travelDir":0,"currentElectricity":50.0,"chargeStatus":0,"cruisingDistance":100.0,"powerAlarmStatus":2,"travelStatus":0,"workStatus":2,"recordTime":"2017-12-26 09:56:33","gpsRecordTime":"2017-12-26 09:56:29","carGroupName":"分时租赁","maintPeriod":"default","showImage":"","statistics":0},{"carId":"201708231712045372727804222","stationId":"","stationName":"","brand":"江淮","model":"iEV5","color":"白色","plateNum":"鄂A22222","city":"武汉市","carOwner":"武汉市畅的科技有限公司","photo":"IEV5.png","currentKM":0.0,"ownerShip":0,"intoServTime":"2015-10-22 00:00:00","milesRange":200.0,"rentStatus":0,"rentPrice":15.0,"maxDayFee":150.0,"plugType":0,"carType":0,"vin":"     ","startKilo":0.0,"powerType":0,"transMissionType":0,"engineNumber":"       ","maxSpeed":120.0,"buyDate":"2017-08-02 00:00:00","hasTrunk":0,"rentPriceMinute":0.3,"licensePhoto":"","rentPriceNight":75.0,"annualSurvey":"default","maintenaceCycle":"default","minRentPrice":9.0,"maintenaceKilo":0.0,"rentStartKilo":0.0,"remark":"","nextMiKilo":0.0,"tripMileage":0.0,"maintenanceCount":0,"carStatus":0,"longitude":0.0,"latitude":0.0,"carPosition":"","currentSpeed":0.0,"travelDir":0,"currentElectricity":74.0,"chargeStatus":0,"cruisingDistance":148.0,"powerAlarmStatus":2,"travelStatus":0,"workStatus":2,"recordTime":"2017-08-24 09:55:50","gpsRecordTime":"1999-11-30 00:00:00","carGroupName":"分时租赁","maintPeriod":"default","showImage":"","statistics":0},{"carId":"201704011527212662981590802","stationId":"","stationName":"","brand":"江淮","model":"iEV5","color":"白色","plateNum":"鄂A242DZ","city":"武汉市","carOwner":"武汉市畅的科技有限公司","photo":"IEV5.png","currentKM":123.0,"ownerShip":0,"intoServTime":"2015-10-22 00:00:00","milesRange":200.0,"rentStatus":0,"rentPrice":0.0,"maxDayFee":0.0,"plugType":0,"carType":0,"vin":"qwq     ","startKilo":0.0,"powerType":0,"transMissionType":0,"engineNumber":"111    ","maxSpeed":120.0,"buyDate":"2017-12-12 00:00:00","hasTrunk":0,"rentPriceMinute":0.0,"licensePhoto":"","rentPriceNight":0.0,"annualSurvey":"default","maintenaceCycle":"default","minRentPrice":0.0,"maintenaceKilo":0.0,"rentStartKilo":0.0,"remark":"不错","nextMiKilo":0.0,"tripMileage":12551.0,"maintenanceCount":0,"carStatus":0,"longitude":114.46716,"latitude":30.469198,"carPosition":"湖北省武汉市江夏区佛祖岭街道佛祖岭三路","currentSpeed":0.0,"travelDir":0,"currentElectricity":82.0,"chargeStatus":0,"cruisingDistance":164.0,"powerAlarmStatus":2,"travelStatus":0,"workStatus":2,"recordTime":"2018-01-09 17:26:48","gpsRecordTime":"2018-01-09 17:26:43","carGroupName":"分时租赁","maintPeriod":"default","showImage":"","statistics":0},{"carId":"201606031546027670419188735","stationId":"","stationName":"","brand":"江淮","model":"iEV5","color":"白色","plateNum":"鄂AC4D38","city":"武汉市","carOwner":"武汉市畅的科技有限公司","photo":"IEV5.png","currentKM":33.0,"ownerShip":0,"intoServTime":"2015-10-22 00:00:00","milesRange":200.0,"rentStatus":0,"rentPrice":0.0,"maxDayFee":0.0,"plugType":0,"carType":0,"vin":"00000     ","startKilo":0.0,"powerType":0,"transMissionType":0,"engineNumber":"1111","maxSpeed":120.0,"buyDate":"2015-10-22 00:00:00","hasTrunk":0,"rentPriceMinute":0.0,"licensePhoto":"","rentPriceNight":0.0,"annualSurvey":"default","maintenaceCycle":"default","minRentPrice":0.0,"maintenaceKilo":0.0,"rentStartKilo":0.0,"remark":"","nextMiKilo":0.0,"tripMileage":39373.0,"maintenanceCount":0,"carStatus":0,"longitude":0.0,"latitude":0.0,"carPosition":"","currentSpeed":206.0,"travelDir":0,"currentElectricity":85.0,"chargeStatus":0,"cruisingDistance":170.0,"powerAlarmStatus":2,"travelStatus":1,"workStatus":2,"recordTime":"2017-08-02 09:15:22","gpsRecordTime":"1999-11-30 00:00:00","carGroupName":"分时租赁","maintPeriod":"default","showImage":"","statistics":0},{"carId":"201708231712045372727806666","stationId":"","stationName":"","brand":"江淮","model":"IEV5","color":"白色","plateNum":"皖AC2483","city":"石家庄市","carOwner":"","photo":"IEV5.png","currentKM":0.0,"ownerShip":0,"intoServTime":"2015-10-22 00:00:00","milesRange":200.0,"rentStatus":0,"rentPrice":15.0,"maxDayFee":120.0,"plugType":0,"carType":0,"vin":"     ","startKilo":0.0,"powerType":0,"transMissionType":0,"engineNumber":"       ","maxSpeed":120.0,"buyDate":"","hasTrunk":0,"rentPriceMinute":0.3,"licensePhoto":"","rentPriceNight":60.0,"annualSurvey":"default","maintenaceCycle":"default","minRentPrice":9.0,"maintenaceKilo":0.0,"rentStartKilo":0.0,"remark":"","nextMiKilo":0.0,"tripMileage":197.0,"maintenanceCount":0,"carStatus":5,"longitude":114.442424,"latitude":38.005692,"carPosition":"河北省石家庄市桥西区红旗街道石铜路蓝岛·书香苑","currentSpeed":0.0,"travelDir":0,"currentElectricity":94.0,"chargeStatus":0,"cruisingDistance":188.0,"powerAlarmStatus":2,"travelStatus":0,"workStatus":2,"recordTime":"2017-12-22 16:45:36","gpsRecordTime":"2017-12-05 08:25:22","carGroupName":"分时租赁","maintPeriod":"default","showImage":"","statistics":0}]}}
+        var todoListTpl = document.getElementById('todoListTpl').innerHTML;
+        console.log(todoListTpl)
+        document.getElementById("todoList").innerHTML = laytpl(todoListTpl).render(result.data.rows);
+        form.render();
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/operation/getCarList',
+            pageSize: 10,
+            params: parmas,
+            columns: [{
+                fieldName: '车牌号',
+                field: 'plateNum'
+            },{
+                fieldName: '品牌',
+                field: 'brand'
+            }, {
+                fieldName: '型号',
+                field: 'model'
+            }, {
+                fieldName: '所属站点',
+                field: 'stationName'
+            }, {
+                fieldName: '操作',
+                field: 'carId',
+                format: function (val,obj) {
+                    var html = '<input type="button" value="编辑" data-action="edit" data-id="' + val + '" data-platenum="'+obj.plateNum+'编辑" data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-mini" /> '+
+                    '<input type="button" value="位置跟踪" data-action="follow" data-id="' + obj.carId + '" data-platenum="'+obj.plateNum+'跟踪" data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-mini" /> ';
+                    return html;
+                }
+            }],
+            even: true,
+            //skin: 'row',
+            checkbox: true,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td:last-child').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        var id = $that.data('id');
+                        var platenum = $that.data('platenum');
+                        $that.on('click', function () {
+                            var jsonStr = encodeURI($that.attr("data-obj"));
+                            switch (action) {
+                                case 'edit':
+                                    parent.tab.tabAdd({
+                                        href: 'car_edit.html?carInfo='+jsonStr, //地址
+                                        icon:"fa fa-pencil-square-o",
+                                        title:platenum
+                                    });
+                                    break;
+                                case 'follow': //删除
+                                    parent.tab.tabAdd({
+                                        href: 'car_follow_one_car.html?carId='+id, //地址
+                                        icon:"fa fa-pencil-square-o",
+                                        title:platenum
+                                    });
+                                    break;
+                                case 'del': //删除
+                                    layerTips.msg(action + ":" + id);
+                                    break;
+                            }
+                        });
+                    });
+                });
+            }
+        
+        });
+        
+        btable.render();
+        //监听搜索表单的提交事件
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            btable.get(data.field);
+            return false;
+        });
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+        setInterval(function(){
+           $('button[type="submit"]').click();
+        },30000);
+        $(window).on('resize', function (e) {
+            var $that = $(this);
+            $('#content').height($that.height() - 92);
+        }).resize();
+        //日期控件控制
+        //全选
+        form.on('checkbox(allChoose)', function(data){
+          console.log(data);
+          var child = $(data.elem).parents('table').siblings('.table').find('table').find('tbody input[type="checkbox"]');
+          child.each(function(index, item){
+            item.checked = data.elem.checked;
+          });
+          form.render('checkbox');
+        });
+    });
+</script>
+</body>
+
+</html>

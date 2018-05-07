@@ -1,0 +1,482 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>添加区域</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+
+    <style type="text/css">
+        html,body{width:100%;height:100%}
+        .map-wrap{width:100%;height:100%;}
+        .tool-box{ position:absolute;left:15px;top:15px;z-index:999;}
+        #J_city_select{border:none;box-shadow:#ccc 3px 3px 7px;border-radius:0;}
+        .polygon-editor-wrap{position:absolute;left:15px;top:70px;height:100%;max-height:80%;overflow:auto;}
+        #J_polygon_editor_ul li{width: 200px;height:180px;background:rgba(235,235,235,.8);}
+        #J_polygon_editor_ul .tc{margin-top:15px;}
+        .polygon-editor{padding:15px;width:200px;background:rgba(238,238,238,.8);box-shadow:#ccc 3px 3px 7px;font-size:14px;margin-bottom:10px;}
+        #J_polygon_editor_ul .active{background:rgba(255,255,255,.8)}
+        .polygon-editor h3{line-height: 24px;}
+        .polygon-editor .row{line-height: 26px;}
+        .polygon-editor input[type="text"]{width:129px;}
+        .color-block-wrap .color-block{width:20px;height:20px;display:inline-block;border:1px solid #efefef;margin-right:3px;}
+        .color-block-wrap .color-block.active{border:1px solid #333;}
+        ::-webkit-scrollbar{width:6px;}
+        ::-webkit-scrollbar-track{background-color:#fff;}
+        ::-webkit-scrollbar-thumb{background-color:#e0e0e0;}
+        ::-webkit-scrollbar-thumb:hover {background-color:#9c3}
+        ::-webkit-scrollbar-thumb:active {background-color:#fff}
+    </style>
+</head>
+<body>
+<div class = "map-wrap" id="J_map_wrap">
+</div>
+<form class="layui-form">
+<div class="tool-box">
+    <div class="layui-inline">
+    <select id ="J_city_select" lay-filter="city_filter">
+        <option value="000">城市获取中</option>
+    </select>
+    </div>
+    <div class="layui-inline">
+        <label class="layui-form-label">区域类型</label>
+        <div class="layui-input-inline">
+            <select id="J_area_type">
+                <option value="0">分时租赁</option>
+            </select>
+        </div>
+    </div>
+</div>
+<div class ="polygon-editor-wrap">
+    <ul id="J_polygon_editor_ul">
+
+    </ul>
+</div>
+</form>
+<script type="text/html" id="J_polygon_editor_tpl">
+    <div class="row">
+        <label>区域名称</label>
+        <input type="text" name="areaname" id="J_{{d.uuid}}_areaname_input" value={{d.areaName}}>
+    </div>
+    <div class="row">
+        <label>填充颜色</label>
+    </div>
+
+    <div class="color-block-wrap">
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#1abc9c'){ }}active{{#} }}" style="background:#1abc9c" color="#1abc9c" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#16a085'){ }}active{{#} }}" style="background:#16a085" color="#16a085" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#2ecc71'){ }}active{{#} }}" style="background:#2ecc71" color="#2ecc71" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#27ae60'){ }}active{{#} }}" style="background:#27ae60" color="#27ae60" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#3498db'){ }}active{{#} }}" style="background:#3498db" color="#3498db" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#2980b9'){ }}active{{#} }}" style="background:#2980b9" color="#2980b9" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#9b59b6'){ }}active{{#} }}" style="background:#9b59b6" color="#9b59b6" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#8e44ad'){ }}active{{#} }}" style="background:#8e44ad" color="#8e44ad" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#34495e'){ }}active{{#} }}" style="background:#34495e" color="#34495e" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#2c3e50'){ }}active{{#} }}" style="background:#2c3e50" color="#2c3e50" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#f1c40f'){ }}active{{#} }}" style="background:#f1c40f" color="#f1c40f" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#f39c12'){ }}active{{#} }}" style="background:#f39c12" color="#f39c12" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#e67e22'){ }}active{{#} }}" style="background:#e67e22" color="#e67e22" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#d35400'){ }}active{{#} }}" style="background:#d35400" color="#d35400" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#e74c3c'){ }}active{{#} }}" style="background:#e74c3c" color="#e74c3c" uuid="{{d.uuid}}"></a>
+        <a href = "javascript:;" class="color-block {{# if(d.linecolor=='#c0392b'){ }}active{{#} }}" style="background:#c0392b" color="#c0392b" uuid="{{d.uuid}}"></a>
+    </div>
+    <div class="row tc">
+        <input type="reset" class="layui-btn layui-btn-primary  layui-btn-mini cancel-button" value="还原" uuid="{{d.uuid}}">
+        <input type="button" class="layui-btn  layui-btn-danger layui-btn-mini delete-button" value="删除" uuid="{{d.uuid}}">
+        <input type="button" class="layui-btn layui-btn-mini sure-button" value="保存" uuid="{{d.uuid}}">
+    </div>
+</script>
+
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.2&key=1a5cdec55ebac9dbd85652429f54d4d1"></script>
+<script type="text/javascript" src="http://cache.amap.com/lbs/static/addToolbar.js"></script>
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','ajax','laytpl'], function (){
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+        var laytpl = layui.laytpl;
+        //初始化地图对象，加载地图
+        var map = new AMap.Map("J_map_wrap", {
+            resizeEnable: true
+        });
+        map.plugin(["AMap.ToolBar","AMap.PolyEditor"],function(){   //在地图中添加ToolBar插件
+            toolBar = new AMap.ToolBar({
+                position:'RT'
+            });
+            map.addControl(toolBar);
+
+        });
+        var contextMenu = new AMap.ContextMenu();
+        var currentCity  = {};
+        var contextMenuPositon;
+        var polygonArray = {};
+        var polygonEditorArray ={};
+        var polygonDomArray = {};
+        //初始化地图定位点
+        var markers=[];
+        init();
+        /**
+         * page initialize function
+         * initialize city selector
+         * initialize event handler
+         * render map first
+         */
+        function init(){
+            //get city data and render city select
+            $.get(global.host+"api/operation/getCityList.htm",{},function(res){
+                var cityArray = res.data.cityList;
+                var $J_city_select = $("#J_city_select");
+                var $J_polygon_editor_ul =$("#J_polygon_editor_ul");
+                var select_val;
+                var select_index=-1;
+                $J_city_select.empty();
+                for(var i = 0; i<cityArray.length;i++){
+                    $J_city_select.append('<option value="'+JSON.stringify(cityArray[i]).replace(/\"/g,"'")+'">'+cityArray[i].districtName+'</option>');
+                    if(cityArray[i].weight==99999){
+                        select_val=JSON.stringify(cityArray[i]).replace(/\"/g,"'");
+                        select_index=i;
+                    }
+                }
+                $J_city_select.val(select_val);
+                form.render('select');
+                if(cityArray.length>0){
+                    if(select_index!=-1){
+                        cityChanged(cityArray[select_index].districtId,cityArray[select_index].lng,cityArray[select_index].lat);
+                    }else{
+                        cityChanged(cityArray[0].districtId,cityArray[0].lng,cityArray[0].lat);
+                    }
+                }
+                //listen select change event
+                form.on('select(city_filter)', function(data){
+                    var obj = JSON.parse(data.value.replace(/'/g, '"'));
+                    cityChanged(obj.districtId,obj.lng,obj.lat);
+                })
+                //add a click event listener to a color block in the polygon editor
+                $J_polygon_editor_ul.on("click",".color-block",colorBlockClickHandler);
+                //add a click event listener to a cancel-button in the polygon editor
+                $J_polygon_editor_ul.on("click",".cancel-button",cancelButtonClickHandler);
+                //add a click event listener to a sure-button in the polygon editor
+                $J_polygon_editor_ul.on("click",".sure-button",sureButtonClickHandler);
+                $J_polygon_editor_ul.on("click",".delete-button",deleteButtonClickHandler);
+                contextMenu.addItem("添加区域",function(e){
+                    var leftLng = contextMenuPositon.getLng() -0.05;
+                    var TopLat = contextMenuPositon.getLat()-0.05;
+                    var rightLng = contextMenuPositon.getLng() +0.05;
+                    var bottomLat = contextMenuPositon.getLat()+0.05;
+                    addButtonClickHandler([[leftLng,TopLat],[rightLng,TopLat],[rightLng,bottomLat],[leftLng,bottomLat]]);
+                });
+                AMap.event.addListener(map,'rightclick',function(e){
+                    contextMenu.open(map,e.lnglat);
+                    contextMenuPositon = e.lnglat;
+                });
+
+            });
+        }
+
+        /**
+         * done when city select change event is triggered
+         * @districtId citycode or districtId of city. for example, WuHan is 4201.
+         * @lng  center point of city
+         * @lat  center point of city
+         */
+        function cityChanged(districtId,lng,lat){
+            currentCity = {
+                districtId:districtId
+            }
+            //change the map  center point
+            if(lng==0||lat==0){
+                map.setCity(JSON.parse($('#J_city_select').val().replace(/'/g, '"')).districtName);
+            }else{
+                map.panTo(new AMap.LngLat(lng,lat));
+            }
+            map.setZoom(11);
+
+            //get area shape data of the city
+           ajax.post(global.host+"api/operation/getAreaList.htm",{cityCode:districtId,operatorId:global.userInfo.operatorId},function(data){
+                //initialize polygonArray;
+                removeAllPolygons();
+                polygonArray ={};
+                polygonEditorArray = {};
+               var areaList=data.rows  //对数据做预处理，格式转换
+               var infoWindow = new AMap.InfoWindow({offset: new AMap.Pixel(0, -30)});
+                for(var i=0;i<areaList.length;i++){
+                    var uuid = generateMixed(16);
+                    areaList[i].uuid = uuid;
+                    polygonArray[uuid] = new AMap.Polygon({
+                        map:map,
+                        path:toArray(areaList[i].borderList),
+                        fillColor:areaList[i].lineColor,
+                        fillOpacity:0.3,
+                        strokeWeight:2,
+                        strokeColor:areaList[i].lineColor,
+                        extData:areaList[i]
+                    });
+                    //if you want to edit a polygon, also need to create a polygonEditor for the polygon at the same time.
+                    //see amap api . http://lbs.amap.com/api/javascript-api/reference/overlay#Polygon
+                    polygonEditorArray[uuid] = new AMap.PolyEditor(map,polygonArray[uuid]);
+                    //bind dblclick event to polygon
+                    //var area = AMap.GeometryUtil.ringArea(areaList[i].borderlist)//求面积
+                    // 设置鼠标划过点标记显示的文字提示
+                    polygonArray[uuid].on("dblclick",polygonDoubleClickHandler);
+                    polygonArray[uuid].on("click",polygonEditorClickHandler);
+                }
+                //map.setFitView();
+
+                //清空数组
+                for(var i=markers.length-1;i>=0;i--){
+                    markers[i].setMap(null);
+                }
+                markers=[];
+                /**
+                 * 添加站点喵点到地图上
+                 */
+                var stationList = data.stationList;
+                for(var i=0,len=stationList.length;i<len;i++){
+                    var marker = new AMap.Marker({ //添加自定义点标记
+                        map:map,
+                        icon: "images/marker-rentcar.png",
+                        offset: new AMap.Pixel(-17, -61),
+                        position:new AMap.LngLat(stationList[i].longItude,stationList[i].latItude),
+                        content:'<div class="marker-car-icon" title="'+stationList[i].staName+'"><img src="images/marker-rentcar.png" style="top: 0px; left: 0px;"><div class="marker-car-plate"><div class="arrow"></div></div></div>',
+                        extData:stationList[i]
+                    });
+                    markers.push(marker);
+                }
+            });
+
+        }
+        /**
+         * remove all polygons and all editors on the map
+         */
+        function removeAllPolygons(){
+            for(uuid in polygonArray){
+                polygonArray[uuid].setMap(null);
+                polygonEditorArray[uuid].close();
+              //document.getElementById("J_polygon_editor_ul").removeChild(polygonDomArray[uuid]);
+            }
+        }
+        /**
+         * trigger when a polygon double clicked
+         */
+        function polygonDoubleClickHandler(e){
+            var extData = this.getExtData();
+            polygonEditorArray[extData.uuid].open();
+            // prepare data will be render in editor template
+            var data =extData;
+            //create a polygon editor dom that append to document
+            var id ="J_"+extData.uuid+"_li";
+            if(!document.getElementById(id)){
+                this.setOptions({
+                    draggable:true,
+                    strokeStyle:"dashed"
+                });
+                polygonDomArray[extData.uuid] = document.createElement("li");
+                polygonDomArray[extData.uuid].id = id;
+                polygonDomArray[extData.uuid].className ="polygon-editor";
+                document.getElementById("J_polygon_editor_ul").appendChild(polygonDomArray[extData.uuid] );
+                var editFormTpl = document.getElementById("J_polygon_editor_tpl").innerHTML;
+                document.getElementById(id).innerHTML = laytpl(editFormTpl).render(data);
+                form.render('select');
+            }
+            activePolygonEditors(extData.uuid);
+        }
+        function polygonEditorClickHandler(e){
+            activePolygonEditors(e.target.getExtData().uuid);
+        }
+        function activePolygonEditors(uuid){
+            var $targePolygonEditor =$("#J_"+uuid+"_li");
+            $targePolygonEditor.siblings().removeClass("active");
+            $targePolygonEditor.addClass("active");
+        }
+        /**
+         * trigger when a color block clicked
+         * re-render the polygon
+         */
+        function colorBlockClickHandler(e){
+            var $this = $(this);
+            $this.siblings().removeClass("active");
+            $this.addClass("active");
+            polygonArray[$this.attr("uuid")].setOptions({
+                strokeColor:$this.attr("color"),
+                fillColor:$this.attr("color")
+            });
+        }
+
+        function cancelButtonClickHandler(e){
+            var $this = $(this);
+            var uuid = $this.attr("uuid");
+            var extData = polygonArray[uuid].getExtData();
+            extData.areaId?strokeStyle="solid":strokeStyle="dashed";
+            polygonEditorArray[uuid].close();
+            polygonArray[uuid].setOptions({
+                path:toArray(extData.borderList),
+                strokeColor:extData.lineColor,
+                fillColor:extData.lineColor,
+                strokeStyle:strokeStyle,
+                draggable:true
+            });
+//		document.getElementById("J_polygon_editor_ul").removeChild(polygonDomArray[uuid]);
+        }
+
+        function sureButtonClickHandler(e){
+            var $this = $(this);
+            var uuid = $this.attr("uuid");
+            var extData = polygonArray[uuid].getExtData();
+            var borderlist = "";
+            var path = polygonArray[uuid].getPath();
+            var centerPointerLngLat = polygonArray[uuid].getBounds().getCenter();
+            for(var i = 0;i<path.length;i++){
+                borderlist+=path[i].lng+","+path[i].lat+";";
+            }
+            var areaRange = (AMap.GeometryUtil.ringArea(path)/1000000).toFixed(3)//求面积
+            var areaType=$('#J_area_type').val();
+            var lineColor = polygonArray[uuid].getOptions().strokeColor;
+            if(extData.areaId){
+                ajax.post(global.host+"api/operation/doUpdateArea.htm",{
+                    areaId:extData.areaId,
+                    areaName:document.getElementById("J_"+uuid+"_areaname_input").value,
+                    borderList:borderlist,
+                    lineColor:lineColor,
+                    areaRange:areaRange,
+                    areaType:areaType,
+                    operatorId:global.userInfo.operatorId,
+                    areaCenter:centerPointerLngLat.getLng()+","+centerPointerLngLat.getLat(),
+                },function(data){
+                    layer.msg("保存成功");
+                    extData.areaname = document.getElementById("J_"+uuid+"_areaname_input").value;
+                    extData.linecolor = lineColor;
+                    extData.borderlist = path;
+                    savePolygon(uuid,extData);
+                });
+            }else{
+                ajax.post(global.host+"api/operation/doAddArea.htm",{
+                    cityCode:currentCity.districtId,
+                    areaName:document.getElementById("J_"+uuid+"_areaname_input").value,
+                    borderList:borderlist,
+                    lineColor:lineColor,
+                    areaRange:areaRange,
+                    areaType:areaType,
+                    operatorId:global.userInfo.operatorId,
+                    areaCenter:centerPointerLngLat.getLng()+","+centerPointerLngLat.getLat(),
+                },function(data){
+                    layer.msg("保存成功");
+                    extData.areaId = data.id;
+                    extData.borderlist = path;
+                    extData.areaname = document.getElementById("J_"+uuid+"_areaname_input").value;
+                    extData.linecolor = lineColor;
+                    savePolygon(uuid,extData);
+                });
+            }
+
+        }
+
+        function savePolygon(uuid,extData){
+            document.getElementById("J_polygon_editor_ul").removeChild(polygonDomArray[uuid]);
+            polygonArray[uuid].setOptions({
+                draggable:false,
+                strokeStyle:"solid",
+            });
+            polygonEditorArray[uuid].close();
+            polygonArray[uuid].setExtData(extData);
+        }
+
+        function deleteButtonClickHandler(e){
+            var $this = $(this);
+            layer.confirm("确认要删除吗?", { title: "删除确认" }, function (index) {
+                layer.close(index);
+                var uuid = $this.attr("uuid");
+                var extData = polygonArray[uuid].getExtData();
+                if(extData.areaId){
+                    ajax.post(global.host+"api/operation/doDeleteArea.htm",{areaId:extData.areaId, operatorId:global.userInfo.operatorId},function(data){
+                        layer.msg("删除成功");
+                        removePolygon(uuid);
+                    });
+                }else{
+                    layer.msg("删除成功");
+                    removePolygon(uuid);
+                }
+            });
+        }
+
+        function removePolygon(uuid){
+            polygonArray[uuid].setMap(null);
+            polygonEditorArray[uuid].close();
+            document.getElementById("J_polygon_editor_ul").removeChild(polygonDomArray[uuid]);
+        }
+
+        function addButtonClickHandler(path){
+            var uuid = generateMixed(16);
+            var extData = {
+                citycode:currentCity.districtId,
+                uuid:uuid,
+                linecolor:"#ccc",
+                areaName:"新建区域",
+                borderlist:path,
+                operatorid:"111111",
+
+            }
+            polygonArray[uuid] = new AMap.Polygon({
+                map:map,
+                path:copyArray(path),
+                fillColor:extData.linecolor,
+                fillOpacity:0.3,
+                strokeColor:extData.linecolor,
+                strokeDashArray:[10,10],
+                strokeWeight:2,
+                extData:extData
+            });
+            //if you want to edit a polygon, also need to create a polygonEditor for the polygon at the same time.
+            //see amap api . http://lbs.amap.com/api/javascript-api/reference/overlay#Polygon
+            polygonEditorArray[uuid] = new AMap.PolyEditor(map,polygonArray[uuid]);
+            //bind dblclick event to polygon
+            polygonArray[uuid].on("dblclick",polygonDoubleClickHandler);
+            polygonArray[uuid].on("click",polygonEditorClickHandler);
+            AMap.event.trigger(polygonArray[uuid],"dblclick");
+        }
+
+        /**
+         * create uuid
+         * @n uuid length
+         */
+        function generateMixed(n) {
+            var chars = ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+            var res = "";
+            for(var i = 0; i < n ; i ++) {
+                var id = Math.ceil(Math.random()*35);
+                res += chars[id];
+            }
+            return res;
+        }
+        function copyArray(oldArray){
+            var newArray = [];
+            for(var i=0;i<oldArray.length;i++){
+                newArray.push(oldArray[i]);
+            };
+            return newArray;
+        };
+        function toArray(str){
+            var tempArray = str.split(";");
+            var newArray=[];
+            for(var i=0;i<tempArray.length-1;i++){
+                var arr=[];
+                arr.push(parseFloat(tempArray[i].split(",")[0]));
+                arr.push(parseFloat(tempArray[i].split(",")[1]));
+                newArray.push(arr);
+            }
+            return newArray;
+        };
+    });
+    
+</script>
+</body>
+
+</html>

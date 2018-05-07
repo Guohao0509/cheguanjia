@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+		<link rel="stylesheet" href="css/global.css" media="all">
+		<link rel="stylesheet" href="css/main.css" />
+	</head>
+
+	<body>
+	    <form class="layui-form" id="J_edit_form"></form>
+		<script type="text/html" id="J_edit_form_tpl">
+			<div class="admin-main">
+				<blockquote class="layui-elem-quote">
+					车管家服务系统v1.0
+				</blockquote>
+				<div class="panel_box row" id="menu_show">
+					<div class="panel col">
+						<a href="javascript:;" data-url="car_manage.html">
+							<div class="panel_head1"><cite>车辆管理</cite></div>
+							<div class="panel_icon">
+								<i class="layui-icon" data-icon="&#xe62a;">&#xe62a;</i>
+							</div>
+							<div class="panel_word newMessage">
+								<div>
+									<label>租用:</label>
+									<label>{{d.carRenting}}</label>
+								</div>
+								<div>
+									<label>预约:</label>
+									<label>{{d.carOrding}}</label>
+								</div>
+							</div>
+						</a>
+					</div>
+					<div class="panel col">
+						<a href="javascript:;" data-url="car_follow.html">
+							<div class="panel_head2"><cite>车辆监控</cite></div>
+							<div class="panel_icon" style="background-color:#FF5722;">
+								<i class="layui-icon" data-icon="&#xe60e;">&#xe60e;</i>
+							</div>
+							<div class="panel_word userAll">
+								<div>
+									<label>调度中:</label>
+									<label>{{d.dispatching}}</label>
+								</div>
+								<div>
+									<label>故障:</label>
+									<label>{{d.faulting}}</label>
+								</div>
+
+							</div>
+						</a>
+					</div>
+					<div class="panel col">
+						<a href="javascript:;" data-url="order_history.html">
+							<div class="panel_head3"><cite>订单管理</cite></div>
+							<div class="panel_icon" style="background-color:#009688;">
+								<i class="layui-icon" data-icon="&#xe629;">&#xe629;</i>
+							</div>
+							<div class="panel_word userAll">
+
+								<div>
+									<label>{{d.now}}</label>
+									<label>{{d.tradeOfNow}}次</label>
+								</div>
+								<div>
+									<label>{{d.yesterday}}</label>
+									<label>{{d.tradeOfYesterday}}次</label>
+								</div>
+							</div>
+						</a>
+					</div>
+					<div class="panel col">
+						<a href="javascript:;" data-url="user_manage.html">
+							<div class="panel_head4"><cite>用户管理</cite></div>
+							<div class="panel_icon" style="background-color:#5FB878;">
+								<i class="layui-icon" data-icon="&#xe613;">&#xe613;</i>
+							</div>
+							<div class="panel_word imgAll">
+
+								<div>
+									<label>{{d.now}}用户数:</label>
+									<label>{{d.userCountofNow}}</label>
+								</div>
+								<div>
+									<label>{{d.lastMonth}}新增用户:</label>
+									<label>{{d.userLastMonth}}</label>
+								</div>
+							</div>
+						</a>
+					</div>
+					<div class="panel col">
+						<a href="javascript:;" data-url="operator_man_manage.html">
+							<div class="panel_head5"><cite>运维管理</cite></div>
+							<div class="panel_icon" style="background-color:#F7B824;">
+								<i class="layui-icon" data-icon="&#xe631;">&#xe631;</i>
+							</div>
+							<div class="panel_word waitNews">
+								<div>
+									<label>运营人员:</label>
+									<label>{{d.operatorCount}}</label>
+								</div>
+
+							</div>
+						</a>
+					</div>
+
+				</div>
+				<div id="order_show" class="mqs">
+					<div class="head">最近订单</div>
+					<div id="mq" onmouseover=iScrollAmount=0 style="overflow: hidden;width:90%;margin:0 auto; height:733px;" onmouseout=iScrollAmount=1>
+						<ul>
+
+						</ul>
+					</div>
+				</div>
+			</div>
+        </script>
+
+		<script type="text/javascript" src="plugins/layui/layui.js"></script>
+	   <script type="text/javascript">
+           var global = window.parent.global;
+           var oMarquee; //滚动对象
+           var iLineHeight =137; //单行高度，像素
+           var iLineCount; //实际行数
+           var iScrollAmount = 1.8; //每次滚动高度，像素
+           var orderList;
+           layui.config({
+               base: 'js/',
+               v: new Date().getTime()
+           }).use([ 'form','ajax','laytpl'], function (){
+               var laytpl = layui.laytpl;
+               var form = layui.form();
+               var ajax = layui.ajax();
+               var $ = layui.jquery;
+
+
+
+               //编辑模版
+               var editFormTpl = document.getElementById("J_edit_form_tpl").innerHTML;
+               //车辆信息
+               ajax.post(global.host+"api/system/homeInfo.htm",{operatorId:global.userInfo.operatorId,sysUserId:global.userInfo.sysUserId},function(res){
+                   res.now=dataToString(0,0);
+                   res.yesterday=dataToString(0,-1);
+                   res.lastMonth=dataToString(0,'false');
+                   //同步渲染 编辑表单
+                   document.getElementById("J_edit_form").innerHTML = laytpl(editFormTpl).render(res);
+
+                   orderList=res.orderList;
+                   var orderHTML='';
+                   for(var i=0;i<orderList.length;i++){
+                       orderHTML+='<li><dl>'+
+                       '<dd><label>订单号:</label>'+orderList[i].rcOrderId+'</dd>'+
+                       '<dd><label>取车时间:</label>'+orderList[i].startTime+'</dd>'+
+                       '<dd><label>取车地点:</label>'+orderList[i].stationName+'</dd>'+
+                       '<dd><label>联系电话:</label>'+orderList[i].mobile+'</dd>'+
+                       '</dl></li>';
+				   }
+                   $('#mq ul').html(orderHTML);
+				   loop();
+			   },function () {
+                   location.href="login.html";
+               })
+                   setInterval(function(){
+                       var startTime;
+                       if(orderList.length==0){
+                           startTime=getNowFormatDate();
+					    }else {
+                           startTime=orderList[0].startTime;
+					   }
+                     ajax.post(global.host+"api/system/getNewOrder.htm",{operatorId:global.userInfo.operatorId,startTime:startTime},function(res){
+                        if(res.newOrder!=null){
+                            var newOrderHTML='';
+                                newOrderHTML+='<dl>'+
+                                '<dd><label>订单号:</label>'+res.newOrder.rcOrderId+'</dd>'+
+                                '<dd><label>取车时间:</label>'+res.newOrder.startTime+'</dd>'+
+                                '<dd><label>取车地点:</label>'+res.newOrder.stationName+'</dd>'+
+                                '<dd><label>联系电话:</label>'+res.newOrder.mobile+'</dd>'+
+                                '</dl>';
+                            if(orderList<=10){
+                                $('#mq ul').prepend('<li>'+newOrderHTML+'</li>');
+                                orderList.push(newOrderHTML);
+							}else{
+                                $('#mq ul li:first').html(newOrderHTML);
+							}
+                            loop();
+						}
+					 },function () {
+						 location.href="login.html";
+                     });
+				   },1000*60*5);
+               $(document).on('click','.panel a',function(){
+                   var url=$(this).attr('data-url');
+                   $('.layui-nav-item dl dd a', window.parent.document).each(function(){
+                       if($(this).attr('data-url')==url){
+                           $(this).parent().click();
+                       }
+                   });
+               });
+		   })
+		   function loop(){
+               if(orderList.length>5){
+                   //最新订单
+                   iLineCount=orderList.length;
+                   oMarquee = document.getElementById("mq");
+                   oMarquee.innerHTML += oMarquee.innerHTML;
+                   window.setTimeout( "run()", 2500 );
+               }
+		   }
+           function run() {
+               oMarquee.scrollTop += iScrollAmount;
+               if ( oMarquee.scrollTop == iLineCount * iLineHeight )
+                   oMarquee.scrollTop = 0;
+               if ( oMarquee.scrollTop % iLineHeight == 0 ) {
+                   window.setTimeout( "run()", 2500 );
+               } else {
+                   window.setTimeout( "run()", 10 );
+               }
+           }
+           function dataToString(month,day){
+               var date = new Date();
+               if(month=='false'){
+                   return date.getFullYear();
+			   }
+               var mon = date.getMonth()+ month;
+               if(day=='false'){
+                   if(mon==0){
+                       return date.getFullYear()-1+ "-12"
+				   }
+                   return date.getFullYear() + "-" +mon
+			   }
+               mon = date.getMonth() + 1 + month;
+               var day = date.getDate()+day;
+               return date.getFullYear() + "-" +mon+ "-" +day;
+           }
+           function getNowFormatDate() {
+               var date = new Date();
+               var seperator1 = "-";
+               var seperator2 = ":";
+               var month = date.getMonth() + 1;
+               var strDate = date.getDate();
+               if (month >= 1 && month <= 9) {
+                   month = "0" + month;
+               }
+               if (strDate >= 0 && strDate <= 9) {
+                   strDate = "0" + strDate;
+               }
+               var currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate
+                   + " " + date.getHours() + seperator2 + date.getMinutes()
+                   + seperator2 + date.getSeconds();
+               return currentdate;
+           }
+	   </script>
+	</body>
+
+</html>

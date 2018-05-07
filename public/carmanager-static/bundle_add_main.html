@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>添加优惠卷主页面管理</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+  <div class="layui-tab layui-tab-brief">
+    <div class="panel_icon">
+
+    </div>
+    <ul class="layui-tab-title" id="titleContent">
+      <li class="layui-this" url="bundle_add_base.html">基础分时套餐</li>
+      <li url="bundle_add_discount.html">优惠包套餐</li>
+    </ul>
+    <div id="bundleAddContent" class="layout-nav-card layui-tab-content" style="padding:0px;">
+      <div class="layui-tab-item layui-show">
+          <iframe src="" frameborder="0" style="width:100%;"></iframe>
+      </div>
+    </div>
+  </div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script type="text/html" id="templateTitle">
+  {{#  layui.each(d, function(index, item){ }}
+    <li class="layui-this" data-obj='{{ JSON.stringify(item) }}'>{{ item.pptName }}</li>
+  {{#  }); }}
+</script>
+<script>
+  
+    var global = window.parent.global;
+    layui.config({
+      base: 'js/',
+      v: new Date().getTime()
+    }).use(['element','form','ajax', 'laytpl'], function () {
+        var  $ = layui.jquery;
+        var layerTips = parent.layer === undefined ? layui.layer : parent.layer; //获取父窗口的layer对象
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var element = layui.element();
+        var laytpl = layui.laytpl;
+        var parmas = {
+          t: new Date().getTime(),
+          operatorId:global.userInfo.operatorId
+        };
+        ajax.post(global.host+"api/trade/getPricingPackageType",{},function(data){
+          $('#titleContent').innerHTML = laytpl($(templateTitle).innerHTML).render(data);
+        })
+
+        function tab(url) {
+          $(bundleAddContent).find('iframe').attr('src', url);
+        }
+        
+        tab('bundle_add_base.html');
+        
+        $('.layui-tab-title').on('click', 'li', function (e) {
+          // var url = $(e.target).attr('url');
+          // tab(url);
+        })
+      
+
+        $(window).on('resize', function () {
+          var $content = $('#bundleAddContent');
+          $content.height($(this).height() - 61);
+          $content.find('iframe').each(function () {
+            $(this).height($content.height());
+          });
+        }).resize();
+    });
+</script>
+</body>
+
+</html>

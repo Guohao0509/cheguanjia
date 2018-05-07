@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>收益管理</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+    <style type="text/css">
+        .layui-block{
+            margin-top: 20px;
+            margin-left: 20px;
+        }
+        #money_total{font-size: 16px;display: inline-block;height: 30px;line-height: 30px;}
+        .cash_title{margin-left: 60px;margin-top: 10px;}
+        .cash_title div{margin-left: 40px;font-size: 20px;}
+        .cash_hint{background: #DDDDDD;width: 70%;margin-left: 20px;margin-top: 30px;font-size: 16px;height:24px;line-height: 24px;}
+        .cash_hint label{padding-left:10px;}
+        #J_edit_form{display: none;}
+        #J_edit_form h1{margin-left: 60px;margin-top: 10px;font-size: 18px;}
+    </style>
+</head>
+<body>
+
+    <div class="layui-tab layui-tab-brief">
+        <div class="panel_icon">
+
+        </div>
+        <ul class="layui-tab-title">
+            <li class="layui-this">申请提现</li>
+            <li>提现记录</li>
+        </ul>
+        <div class="layui-tab-content">
+            <div class="layui-tab-item layui-show">
+                <div class="cash_title">
+                 <div class="layui-input-inline">
+                     <i class="layui-icon" data-icon="&#xe612;">&#xe612;</i>
+                     <label>运营商</label>
+                 </div>
+                 <div class="layui-input-inline">
+                      <i class="layui-icon" data-icon="&#xe612;">&#xe612;</i>
+                     <label>企业用户</label>
+                 </div>
+                 <div class="layui-input-inline">
+                     <i class="layui-icon" data-icon="&#xe612;">&#xe612;</i>
+                     <label>个人</label>
+                 </div>
+                </div>
+                <div class="cash_hint"><i class="layui-icon" data-icon="&#xe60b;">&#xe60b;</i><label>提现申请将在5个工作日内完成，请关注站内消息和短信提醒(如有未受理完成的申请则不可再次提交申请)!</label></div>
+                <form class="layui-field-box layui-form" id="J_edit_form">
+                    <div class="layui-block">
+                        <label class="layui-form-label required">可提现金额</label>
+                        <div class="layui-input-inline">
+                           <label id="money_total"></label>&nbsp;元
+                        </div>
+                    </div>
+                    <div class="layui-block">
+                        <label class="layui-form-label required">提现金额</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="money" id="cash_money"   placeholder="请输入提现金额" lay-verify="required|money_check" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-block">
+                        <label class="layui-form-label required">提现密码</label>
+                        <div class="layui-input-inline">
+                            <input type="password" name="payPwd"    placeholder="请输入提现密码" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-block">
+                        <label class="layui-form-label required">验证码</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="checkCode"    placeholder="请输入验证码" lay-verify="required" autocomplete="off" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline">
+                            <button type="button" id="get_code" class="layui-btn layui-btn-small" >获取验证码</button>
+                        </div>
+                    </div>
+                    <div class="layui-block">
+                        <div class="layui-input-block">
+                            <button type="button" class="layui-btn layui-btn-small" lay-submit="" lay-filter="cash_sub">申请提现</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="layui-tab-item">
+                <div class="admin-main">
+                <fieldset class="layui-elem-field">
+                    <form class="layui-field-box layui-form" id="J_search_form">
+
+                        <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                            <div class="layui-inline" id="export_select">
+
+                            </div>
+                            <div class="layui-inline">
+                                <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="export_info" >导出信息</button>
+                            </div>
+
+                        </div>
+                    </form>
+                </fieldset>
+                    <div id="content" style="width: 100%;height: 533px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable','element','form','laydate','ajax','dictionary'], function () {
+        var btable = layui.btable(),
+                $ = layui.jquery,
+                layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+                form = layui.form(),
+                ajax = layui.ajax(),
+                element = layui.element(),
+                dictionary = layui.dictionary();
+        var allowCash;
+        var parmas = {
+            t: new Date().getTime(),
+            operatorId:global.userInfo.operatorId
+        };
+        $.get(global.host+'api/operator/getAccountFreeBalance.htm',{},function(res){
+            if(res.data.freeBalance=='-'){
+               $('#J_edit_form').html('<h1>未找到账户信息，请先创建账户</h1>');
+            }else{
+                $('#money_total').html(res.data.freeBalance);
+            }
+            allowCash=res.data.allowCash;
+            $('#J_edit_form').show();
+        });
+        form.on('submit(cash_sub)',function(data){
+            if(!allowCash){
+                layer.alert("请在上次提现受理完成后再进行申请");
+                return false;
+            }
+            $.extend(true, data.field,{serviceName:'CASH'});
+            ajax.post(global.host+'api/trade/doAddCashApply.htm',data.field,function(data){
+                if(eval(data)==true) {
+                    window.parent.layer.msg("申请已提交");
+                    window.location.reload();
+                }else{
+                    window.parent.layer.msg("申请提交失败");
+                }
+            })
+            return false;
+        });
+        form.verify({
+            money_check:function (value) {
+               var freeBalance=parseFloat($('#money_total').html());
+               var money=parseFloat(value);
+               if(isNaN(money)){
+                   return '只能填写数字';
+               }
+               if(money>freeBalance){
+                   return '可提金额不足';
+               }
+            }
+        });
+        //点击获取验证码
+        $('#get_code').click(function(){
+            if(!allowCash){
+                layer.alert("请在上次提现受理完成后再进行申请");
+                return;
+            }
+            var time=60;
+            $that=$(this);
+            $.ajax({
+                async : true,
+                url :  global.host+"api/util/sendMobileCodeForCash.htm",
+                type : "POST",
+                dataType : "json",
+                data:{serviceName:'CASH'},
+                success: function(res){
+                    if(res.code==0){
+                        layer.msg('短信已发送至手机'+res.data.substr(0,4)+'****'+res.data.substr(8,3),{time:4000})
+                        var i=setInterval(function(){
+                            time--;
+                            if(time==0){
+                                $that.removeAttr('disabled');
+                                $that.removeClass('layui-disabled');
+                                $that.css('opacity','1');
+                                $that.html('获取验证码');
+                                clearInterval(i);
+                            }else{
+                                $that.addClass('layui-disabled');
+                                $that.html(time+'s后重新发送');
+                                $that.attr('disabled','');
+                                $that.css('opacity','0.6');
+                            }
+                        },1000)
+                    }else{
+                        layer.msg('短信发送失败')
+                    }
+                }
+            });
+
+        })
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+      
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/trade/getCashApplyList.htm',
+            pageSize: 10,
+            params: parmas,
+            columns: [{
+                fieldName: '申请编号',
+                field: 'applyId'
+            },{
+                fieldName: '申请时间',
+                field: 'applyDate',
+            }, {
+                fieldName: '提现人',
+                field: 'cardHolder'
+            },{
+                fieldName: '转入账户',
+                field: 'cardNo'
+            },{
+                fieldName: '转入银行',
+                field: 'bankName'
+            },{
+                fieldName: '提现金额',
+                field: 'money',
+            },{
+                fieldName: '申请状态',
+                field: 'status',
+                format:function(val){
+                    return dictionary.CASH_APPLY_STATUS(val);
+                }
+            },{
+                fieldName: '审核信息',
+                field: 'info'
+            },{
+                fieldName: '操作',
+                field: 'operatorId',
+                format:function(val,obj){
+                    if(obj.status==0||obj.status==1){
+                        return '<input type="button" value="撤销申请" data-action="del" data-id="' + val + '" data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-mini layui-btn-danger" /> ';
+                    }else{
+                        return '<input type="button" value="撤销申请" data-action="del" data-id="' + val + '" data-obj=\''+JSON.stringify(obj)+'\' disabled class="layui-btn layui-btn-mini layui-disabled layui-btn-danger" /> ';
+                    }
+                }
+            }
+            ],
+            even: true,
+            //skin: 'row',
+            checkbox: false,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td:last-child').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        $that.on('click', function () {
+                            var applyId = JSON.parse($that.attr("data-obj")).applyId;
+                            switch (action) {
+                                case 'del': //删除
+                                    layer.confirm("确认要撤销吗?", { title: "撤销确认" }, function (index) {
+                                        layer.close(index);
+                                        ajax.post(global.host+"api/trade/doCancelCashApply.htm",{applyId:applyId},function(result){
+                                            if(eval(result)){
+                                                window.location.reload();
+                                                window.parent.layer.msg("撤销申请成功");
+                                            }else{
+                                                window.parent.layer.msg("撤销申请失败");
+                                            }
+                                        });
+                                    });
+                                    break;
+                            }
+                        });
+                    });
+                });
+            }
+        
+        });
+        
+        btable.render();
+
+        //导出信息
+        $("#export_info").on("click",function(){
+        	var title="&&title=";//标题
+        	var titles=$(".layui-table").find("th");
+        	var limit_select=$('select[name="limit_select"]').val().split(",");
+        	var start="&&start="+limit_select[0];//开始条数
+        	var limit="&&limit="+limit_select[1];//
+        	for(var i=1;i<titles.length-1;i++){
+        		if(titles[i].innerHTML.indexOf("<")!=-1){
+        			title+=titles[i].innerHTML.substr(0,titles[i].innerHTML.indexOf("<"))+",";
+        		}else{
+        			title+=titles[i].innerHTML+",";
+        		}        		    
+        	}
+        	title=title.substr(0,title.length-1);
+        	var param="";//导出条件
+        	$("#J_search_form").find("input[name],select[name]").each(function(){
+        		param+="&&"+$(this).attr("name")+"="+$(this).val();
+        	});
+        	var url=global.host+"api/util/export_to_xls?operatorId="+global.userInfo.operatorId+"&&sql=CashApply"+title+start+param+limit;
+        	window.location.href=url;        	
+        });
+    });
+
+      
+</script>
+</body>
+
+</html>

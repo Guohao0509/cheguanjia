@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="./layui-v2.2.5/layui/css/layui.css">
+    <script src="./layui-v2.2.5/layui/layui.js"></script>
+    <script src="./test.js"></script>
+    <style>
+        .coupon-wrapper {
+            padding: 10px;
+            width: 250px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+
+        }
+        .coupon-name, .coupon-price {
+            color: green;
+            font-size: 20px;
+        }
+        .coupon-price {
+            float: right;
+        }
+        .coupon-name {
+            margin-bottom: 15px;
+        }
+
+
+    </style>
+</head>
+<script src="./coupon.html" id="sc"></script>
+<input type="text" value="./coupon.html">
+<body>
+    <form action="" class="layui-form">
+        <div id="d"></div>
+        <button class="layui-btn" lay-submit="" lay-filter="demo1">立即提交</button>
+        <div class="coupon-wrapper">
+            <div class="coupon-price">
+                <span class="coupon-value">8</span>
+                <span class="coupon-unit">元</span>
+            </div>
+            <div class="coupon-name">现金满减卷</div>
+            <div class="coupon-rule">
+                满30元可用<br>限合康变频取车可用<br>有效期 2018-12-01至 2018-12-31
+            </div>
+        </div>
+    </form>
+    
+    <script>
+        layui.use(['form', 'layedit', 'laydate'], function(){
+            var form = layui.form;
+            var $ = layui.jquery;
+            var i = 0;
+            console.log($('sc'))
+            $('<div></div>').load('./coupon.html', function (data) {
+                $(this).html(data).find('#template');
+                console.log($(this).html(data).find('#template')[0].innerHTML);
+            })
+        });
+    </script>
+</body>
+</html>

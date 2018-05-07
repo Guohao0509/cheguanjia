@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+
+<div class="admin-main">
+    <form class="layui-form" id="J_edit_form">
+        
+    </form>
+</div>
+    
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+
+<script type="text/html" id="editTemplate">
+    <fieldset class="layui-elem-field">
+        <legend>基本信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <label class="layui-form-label">车辆红包名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="name" value='{{ d.name }}' class="layui-input" lay-verify="required">
+                </div>
+                <div class="layui-form-mid layui-word-aux">内部记录用，不会在用户端显示</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">红包描述</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="couponDescription" value='{{ d.couponDescription }}' class="layui-input" lay-verify="required">
+                </div>
+                <div class="layui-form-mid layui-word-aux">在车辆列表的车辆图片下方显示</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">红包图标</label>
+                <div class="layui-input-inline">
+                    <div class="layui-input-inline">
+                        <img src='{{ d.icon }}' alt="">
+                        <input type="hidden" name="icon" value='{{ d.icon }}'>
+                    </div>
+                </div>
+                <div class="layui-form-mid layui-word-aux">该图标会替换原站点图标，同时会在车辆列表的图片下方显示</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">图标优先级</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="iconDegree" value='{{ d.iconDegree }}' class="layui-input" lay-verify="required">
+                </div>
+                <div  class="layui-form-mid layui-word-aux">一个站点同时存在多种活动，站点图标将显示为优先级最高的图标，从0开始，越大优先级越高</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">开始有效时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="startTime" value='{{ d.startTime }}'  class="layui-input" id="startDate" placeholder="请输入开始时间" onclick="layui.laydate({elem: this, format: 'YYYY-MM-DD'})" lay-verify="required">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">失效时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="endTime" value='{{ d.endTime }}' class="layui-input" id="startDate" placeholder="请输入失效时间" onclick="layui.laydate({elem: this, format: 'YYYY-MM-DD'})" lay-verify="required">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">状态</label>
+                <div class="layui-input-block">
+                    <input type="radio" name="status" value="0" title="未激活" {{# if(d.status==0){ }}checked="true"{{#} }}>
+                    <input type="radio" name="status" value="1" title="已激活" {{# if(d.status==1){ }}checked="true"{{#} }}>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">最大领取次数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="maxNum"  value='{{ d.maxNum }}'  class="layui-input">
+                </div>
+                <div class="layui-form-mid layui-word-aux">次（每完成一笔红包车辆的租车订单即可领取一次）</div>
+            </div>
+        </div>
+    </fieldset>
+    <fieldset class="layui-elem-field">
+        <legend>基本信息</legend>
+        <div id="content"></div>
+    </fieldset>
+
+    <fieldset class="layui-elem-field">
+        <legend>基本信息</legend>
+        <div id="carContent"></div>
+    </fieldset>
+
+    <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+        <div class="layui-inline">
+            <button type="button" class="layui-btn layui-btn" lay-submit="" lay-filter="code_edit">提交</button>
+        </div>
+        <div class="layui-inline">
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn">重置</button>
+        </div>
+    </div>
+</script>
+<script>
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['form', 'ajax', 'laytpl', 'laydate', 'addCoupon', 'bindCar'], function () {
+        var $ = layui.jquery;
+        var laydate = layui.laydate();
+        var ajax = layui.ajax();
+        var form = layui.form();
+        var laytpl = layui.laytpl;
+        var addCoupon = layui.addCoupon(); // 绑定优惠卷的模块
+        var bindCar = layui.bindCar(); // 绑定车辆的模块
+        
+        var layerTips = parent.layer === undefined ? layui.layer : parent.layer; //获取父窗口的layer对象
+        var codeCouponList = {rows: []}; // 初始化已绑定优惠卷的数据结构
+        var carCouponList = {rows: []}; // 初始化已绑定车辆的数据结构
+        // 获取车辆优惠卷的id
+        var ccId = decodeURI(getSearchString("ccId"));
+        ajax.post(global.host+'api/trade/getOneCouponCar', {ccId: ccId}, function (result) {
+            // 构造渲染数据结构
+            carCouponList.rows = result.carList;
+            for (var i = 0; i < result.couponRegulationNumList.length; i ++) {
+                result.couponRegulationNumList[i].couponRegulation.count =  result.couponRegulationNumList[i].num;
+                codeCouponList.rows.push(result.couponRegulationNumList[i].couponRegulation);
+            }
+            
+            // 请求单个车辆红包，渲染edit模板
+            var editTemplate = document.getElementById('editTemplate').innerHTML;
+            document.getElementById("J_edit_form").innerHTML = laytpl(editTemplate).render(result);
+
+            form.render();
+            
+            // 渲染添加优惠卷的视图
+            addCoupon.set({
+                content: document.getElementById('content'),
+                data: codeCouponList
+            });
+           
+            // 构造请求参数 来获取车辆列表
+            var reqParams = {
+                start: 0,
+                limit: carCouponList.rows.length,
+                operatorId: global.userInfo.operatorId,
+                plateNum: '',
+                stationId: '',
+                exceptCarIds: [],
+                bindingCarIds: carCouponList.rows
+            }
+
+            ajax.post(global.host+'api/operation/getCarListForAddCoupon', reqParams, function (result) {
+                carCouponList.rows = result.rows;
+                // 渲染绑定车辆的模块
+                bindCar.set({
+                    content: document.getElementById('carContent'),
+                    data: carCouponList
+                });
+            })
+
+            // 提交编辑
+            form.on('submit(code_edit)', function(data) {
+                // 添加
+                var  reqParams = data.field;
+                reqParams.ccId = ccId;
+                var CouponRegulationNumList = [];
+                var carList = []
+                reqParams.description = '';
+                reqParams.carDescription = ''
+                
+                // 构造优惠卷数据结构
+                for (var i = 0; i < codeCouponList.rows.length; i ++) {
+                    CouponRegulationNumList.push({
+                        "couponRegulation":{"crId": codeCouponList.rows[i].crId},
+                        "num": codeCouponList.rows[i].count
+                    });
+                    // 生成描述
+                    reqParams.description += codeCouponList.rows[i].name + codeCouponList.rows[i].count + '张<br>';
+                }
+                // 构造车辆数据结构
+                for (var i = 0; i < carCouponList.rows.length; i ++) {
+                    carList.push({
+                        carId: carCouponList.rows[i].carId
+                    });
+                    // 生成车辆描述
+                    reqParams.carDescription += carCouponList.rows[i].plateNum + '<br>';
+                }
+
+                reqParams.CouponRegulationNumList = CouponRegulationNumList;
+                reqParams.operatorId = global.userInfo.operatorId;
+                reqParams.carList = carList;
+                // 提交
+                ajax.post(global.host+'api/trade/updateCouponCar', {couponCar: JSON.stringify(reqParams)}, function (result) {
+                    if(result){
+                        window.location.reload();
+                        layerTips.msg("兑换码修改成功");
+                    }else{
+                        layerTips.msg("兑换码修改失败");
+                    }
+                })
+            });
+
+            // 重置
+            form.on('submit(reset)', function (data) {
+                window.setTimeout(function(){
+                    $('form.layui-form').find('button[lay-filter=search]').click();
+                },0);
+                return true;
+            }); 
+        });
+    });
+</script>
+</body>
+
+</html>

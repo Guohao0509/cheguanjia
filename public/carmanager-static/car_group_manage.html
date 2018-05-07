@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>车辆组管理</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">车辆组编号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="carGroupId"   placeholder="请输入车辆组编号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">车辆组名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="carGroupName"   placeholder="请输入车辆组名称" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">车辆组级别</label>
+                    <div class="layui-input-inline">
+                        <select name="carGroupLevel">
+                            <option value="999">全部级别</option>
+                            <option value="1">默认</option>
+                            <option value="0">非默认</option>
+                        </select>
+                    </div>
+                </div>
+             
+            </div>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small"  id="J_add_button">添加车辆组</button>
+                </div>
+                 <div class="layui-inline" id="export_select">
+                      
+                </div>
+                 <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="export_info" >导出信息</button>
+                </div>
+               
+            </div>
+        </form>
+    </fieldset>
+    <div id="content" style="width: 100%;height: 533px;"></div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable', 'form','laydate','layer','dictionary'], function () {
+        var btable = layui.btable(),
+                $ = layui.jquery,
+                layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+                form = layui.form(),
+                layer=layui.layer,
+                dictionary = layui.dictionary();
+                
+        var parmas = {
+            t: new Date().getTime(),
+            operatorId:global.userInfo.operatorId
+        };
+       
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/operation/getCarGroupList',
+            pageSize: 10,
+            params: parmas,
+            columns: [{
+                fieldName: '车辆组编号',
+                field: 'carGroupId'
+            },{
+                fieldName: '车辆组名称',
+                field: 'carGroupName'
+            }, {
+                fieldName: '车辆组级别',
+                field: 'carGroupLevel',
+                format:function(val){
+                    return dictionary.CAR_GROUP_LEVEL(val);
+                }
+            }, {
+                fieldName: '操作',
+                format: function (val,obj) {
+                	var html =
+                        '<input type="button" value="编辑" data-action="edit" data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-mini" /> '+
+                        '<input type="button" value="删除" data-action="del" class="layui-btn layui-btn-mini layui-btn-danger" />'
+                    return html;
+                }
+            }],
+            even: true,
+            //skin: 'row',
+            checkbox: false,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td:last-child').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        var data_obj;
+                        if($that.attr("data-obj")!=undefined){
+                        	 data_obj= eval('(' + $that.attr("data-obj") + ')');                       
+                             var carGroupLevel =data_obj.carGroupLevel; 
+                             if(carGroupLevel==1){
+                             	$that.next().addClass("layui-disabled");
+                             	$that.next().attr("disabled","");
+                             }
+                        }
+                        $that.on('click', function () {
+                            var jsonStr = encodeURI($that.attr("data-obj"));
+                            switch (action) {
+                                case 'edit':
+                                    parent.tab.tabAdd({
+                                        href: 'car_group_edit.html?carGroupInfo='+jsonStr, //地址
+                                        icon:"fa fa-pencil-square-o",
+                                        title:data_obj.carGroupName
+                                    });
+                                    break;
+                                case 'del': //删除
+                                	layer.confirm("确认删除？", {icon: 1, title:'提示'},function(index){
+                                      	var carGroupId=eval('(' + $that.prev().attr("data-obj") + ')').carGroupId;
+                                    	$.get(global.host+'api/operation/doDeleteCarGroup.htm',{'carGroupId':carGroupId,'operatorId':global.userInfo.operatorId},function(result){
+                                    	    layer.close(index);
+                                    		if(result['data']==true){
+                                			     $that.parent().parent().remove();
+                                    			 window.parent.layer.msg("车辆组删除成功"); 
+                                    		 }else{
+                                    			 window.parent.layer.msg("车辆组删除失败"); 
+                                    		 }                   
+                                    	});
+                                    });
+                                    break;
+                            }
+                        });
+                    });
+                });
+            }
+        });
+        
+        btable.render();
+        //监听搜索表单的提交事件
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            btable.get(data.field);
+            return false;
+        });
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+        
+        $("#J_add_button").on('click',function(){
+            parent.tab.tabAdd({
+                href: "car_group_add.html", //地址
+                icon:"fa fa-pencil-square-o",
+                title:'车辆组录入'
+            });
+        });
+        $(window).on('resize', function (e) {
+            var $that = $(this);
+            $('#content').height($that.height() - 92);
+        }).resize();
+    
+        //导出信息
+        $("#export_info").on("click",function(){
+        	var title="&&title=";//标题
+        	var titles=$(".layui-table").find("th");
+        	var limit_select=$('select[name="limit_select"]').val().split(",");
+        	var start="&&start="+limit_select[0];//开始条数
+        	var limit="&&limit="+limit_select[1];//
+        	for(var i=1;i<titles.length-1;i++){
+        		if(titles[i].innerHTML.indexOf("<")!=-1){
+        			title+=titles[i].innerHTML.substr(0,titles[i].innerHTML.indexOf("<"))+",";
+        		}else{
+        			title+=titles[i].innerHTML+",";
+        		}        		    
+        	}
+        	title=title.substr(0,title.length-1); 
+        	var param="";//导出条件
+        	$("#J_search_form").find("input[name],select[name]").each(function(){
+        		param+="&&"+$(this).attr("name")+"="+$(this).val();
+        	});
+        	var url=global.host+"api/util/export_to_xls?operatorId="+global.userInfo.operatorId+"&&sql=CarGroup"+title+start+param+limit;
+        	window.location.href=url;        	
+        });
+    });
+      
+      
+</script>
+</body>
+
+</html>

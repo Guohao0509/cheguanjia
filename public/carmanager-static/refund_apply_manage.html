@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>收支信息</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">用户名</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="realName" placeholder="" autocomplete="off" class="layui-input" >
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">手机号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="mobile" placeholder="" autocomplete="off" class="layui-input" >
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">交易时间</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="startTime" id="minDate" placeholder="" autocomplete="off" class="layui-input" >
+                    </div>
+                    <div class="layui-form-mid">-</div>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="endTime" id="maxDate" placeholder="" autocomplete="off" class="layui-input" >
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                 <div class="layui-inline" id="export_select">
+                      
+                </div>
+                 <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="export_info" >导出信息</button>
+                </div>
+               
+            </div>
+        </form>
+    </fieldset>
+    <div id="content" style="width: 100%;height: 533px;"></div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable', 'form','laydate','ajax','dictionary'], function () {
+        var btable = layui.btable(),
+                $ = layui.jquery,
+                layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+                form = layui.form(),
+                ajax = layui.ajax(),
+                dictionary = layui.dictionary();
+       
+        var parmas = {
+            t: new Date().getTime(),
+            operatorId:global.userInfo.operatorId
+        };
+       
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+      
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/trade/getRefundApplyList.htm',
+            pageSize: 10,
+            params: parmas,
+            columns: [{
+                fieldName: '退款订单号',
+                field: 'arId'
+            }, {
+                fieldName: '交易时间',
+                field: 'finishTime',
+                sortable: true
+            },{
+                fieldName: '用户名',
+                field: 'realName'
+            },{
+                fieldName: '手机号码',
+                field: 'mobile'
+            }, {
+                fieldName: '退款金额',
+                field: 'refundFee'
+            }, {
+                fieldName: '退款描述',
+                field: 'arInfo'
+            },{
+                fieldName: '退款状态',
+                field: 'arStatus',
+                format:function(val){
+                    return dictionary.REFUND_APPLY_status(val);
+                }
+            }
+            ],
+            even: true,
+            //skin: 'row',
+            checkbox: false,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td:last-child').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        $that.on('click', function () {
+                            switch (action) {
+
+                            }
+                        });
+                    });
+                });
+            }
+        
+        });
+        
+        btable.render();
+        //监听搜索表单的提交事件
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            btable.get(data.field);
+            return false;
+        });
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+
+        $(window).on('resize', function (e) {
+            var $that = $(this);
+            $('#content').height($that.height() - 92);
+        }).resize();
+        //日期控件控制
+        $('#minDate').on('click',function(){
+        	if($('#maxDate').val().trim()!=''){
+        		layui.laydate({
+             		 elem:this
+             		 ,min: ''
+             		 ,max: $('#maxDate').val()
+             	 });
+        	}else{
+          	 layui.laydate({
+          		 elem:this
+          		 ,min: ''
+          		 ,max: dataToString()
+          	 });
+        	}
+        });
+        $('#maxDate').on('click',function(){
+        	layui.laydate({
+        		elem:this
+        	    ,min:$('#minDate').val()
+        	    ,max:dataToString() 
+        	 });
+        })
+        //导出信息
+        $("#export_info").on("click",function(){
+        	var title="&&title=";//标题
+        	var titles=$(".layui-table").find("th");
+        	var limit_select=$('select[name="limit_select"]').val().split(",");
+        	var start="&&start="+limit_select[0];//开始条数
+        	var limit="&&limit="+limit_select[1];//
+        	for(var i=1;i<titles.length;i++){
+        		if(titles[i].innerHTML.indexOf("<")!=-1){
+        			title+=titles[i].innerHTML.substr(0,titles[i].innerHTML.indexOf("<"))+",";
+        		}else{
+        			title+=titles[i].innerHTML+",";
+        		}        		    
+        	}
+        	title=title.substr(0,title.length-1); 
+        	var param="";//导出条件
+        	$("#J_search_form").find("input[name],select[name]").each(function(){
+        		param+="&&"+$(this).attr("name")+"="+$(this).val();
+        	});
+        	var url=global.host+"api/util/export_to_xls?operatorId="+global.userInfo.operatorId+"&&sql=RefundApply"+title+start+param+limit;
+        	window.location.href=url;
+        });
+    });
+      //时间格式化
+       function dataToString(){
+    	   var date = new Date(); 
+    	   var mon = date.getMonth() + 1;
+    	   var day = date.getDate();
+    	   return date.getFullYear() + "-" +mon+ "-" +day;
+       }
+      
+</script>
+</body>
+
+</html>

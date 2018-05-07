@@ -1,0 +1,194 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>运营人员编辑</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+    <style type="text/css">
+        .layui-tree li a{
+            font-size: 1px;
+        }
+        ::-webkit-scrollbar{width:6px;}
+        ::-webkit-scrollbar-track{background-color:#fff;}
+        ::-webkit-scrollbar-thumb{background-color:#e0e0e0;}
+        ::-webkit-scrollbar-thumb:hover {background-color:#9c3}
+        ::-webkit-scrollbar-thumb:active {background-color:#fff}
+    </style>
+</head>
+<body>
+<div class="admin-main">
+    <form class="layui-form" id="J_edit_form">
+
+    </form>
+</div>
+<script type="text/html" id="J_edit_form_tpl">
+    <!--由于数据模型变更，这里的一些数据默认固定值，用隐藏域提交-->
+
+    <fieldset class="layui-elem-field">
+        <legend>基础信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label required">姓名</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="nickName" value="{{d.nickName}}"   placeholder="请输入姓名" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">手机号</label>
+                    <div class="layui-input-inline">
+                       <input type="text" name="mobile" value="{{d.mobile}}" placeholder="请输入手机号" lay-verify="required|phone" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">状态</label>
+                    <div class="layui-input-inline">
+                        <select name="status" lay-verify="required">
+                            <option {{# if(d.operatorStatus==0){ }}selected="selected"{{#} }}  value="0">未激活</option>
+                            <option {{# if(d.operatorStatus==1){ }}selected="selected"{{#} }}  value="1">已激活</option>
+                            <option {{# if(d.operatorStatus==2){ }}selected="selected"{{#} }}  value="2">停用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">运营区域</label>
+                    <div class="layui-input-block" id="areas">
+
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">权限赋予</label>
+                    <div id="layui-xtree-demo1" style="width:300px;height:500px;overflow:auto;margin:20px;"></div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+        <div class="layui-inline">
+            <button type="button" class="layui-btn layui-btn-small" lay-submit="" lay-filter="operator_man_edit">提交</button>
+        </div>
+        <div class="layui-inline">
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-small" >重置</button>
+        </div>
+    </div>
+</script>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<!--xtree的js文件-->
+<script type="text/javascript" src="js/layui-xtree.js"></script>
+<script type="text/javascript" src="datas/powers.js"></script>
+<script>
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','laydate','upload','ajax','tree','laytpl','dictionary'], function () {
+        var laytpl = layui.laytpl;
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+
+        window.dictionary = layui.dictionary();
+        //编辑模版
+        var editFormTpl = document.getElementById("J_edit_form_tpl").innerHTML;
+        //车辆信息
+        var sysUserInfo = JSON.parse(decodeURI(getSearchString("sysUserInfo")));
+        var areaLists=sysUserInfo.areaList;
+        var permissionList=null;
+        if(sysUserInfo.permission!=''){
+           permissionList=JSON.parse(sysUserInfo.permission);
+        }
+        //同步渲染 编辑表单
+        document.getElementById("J_edit_form").innerHTML = laytpl(editFormTpl).render(sysUserInfo);
+        //创建tree
+        var xtree = new layuiXtree({
+            elem: 'layui-xtree-demo1' //放xtree的容器（必填）
+            , form: form              //layui form对象 （必填）
+            , data: json              //数据，结构请参照下面 （必填）
+            , isopen: true            //初次加载时全部展开，默认true （选填）
+            , color: "#000"           //图标颜色 （选填）
+            , icon: {                 //图标样式 （选填）
+                open: "&#xe624;"      //节点打开的图标
+                , close: "&#xe622;"   //节点关闭的图标
+                , end: "&#xe621;"     //末尾节点的图标
+            }
+        });
+        if(permissionList!=null){
+            for(var i=0;i<permissionList.length;i++){
+                $('.layui-xtree-checkbox').each(function(){
+                    if($(this).val()==permissionList[i]){
+                        $(this).next().click();
+                    }
+                });
+            }
+        }
+
+        ajax.post(global.host+"api/operation/getAreaList.htm",{operatorId:global.userInfo.operatorId},function(res){
+            var areaList=res.rows;
+            var html="";
+            for(var i=0;i<areaList.length;i++){
+                html+='<input type="checkbox" id="'+areaList[i].areaId+'" name="area" title="'+areaList[i].areaName+'" >';
+            }
+            $('#areas').html(html);
+            for(var i=0;i<areaLists.length;i++){
+                $('#areas input').each(function(){
+                    if($(this).attr("id")==areaLists[i].areaId){
+                        $(this).attr('checked','checked');
+                    }
+                });
+            }
+            form.render();
+        });
+                form.render();
+
+                form.on('submit(operator_man_edit)', function (data) {
+                    var areaIds="";
+                    var powers=xtree.GetChecked();
+                    $('#areas .layui-form-checked').each(function(){
+                        areaIds+=$(this).prev().attr("id")+",";
+                    })
+                    if(powers.length==0){
+                        layer.msg('请赋予权限', {icon: 5});
+                    }else{
+                        $('#areas .layui-form-checked').each(function(){
+                            areaIds+=$(this).prev().attr("id")+",";
+                        })
+                        $.extend(true, data.field, {areaIds:areaIds,sysUserId:sysUserInfo.sysUserId,operatorId: global.userInfo.operatorId,permissionId:JSON.stringify(powers)});
+                        ajax.post(
+                            global.host + "api/system/doUpdateSysUserForOperatorArea.htm", data.field, function (result) {
+                                //window.location.reload();
+                                if (eval(result) == true) {
+                                    window.parent.layer.msg("更新成功");
+                                } else {
+                                    window.parent.layer.msg("更新失败");
+                                }
+
+                            });
+                        return false;
+                    }
+
+                });
+            });
+</script>
+</body>
+
+</html>

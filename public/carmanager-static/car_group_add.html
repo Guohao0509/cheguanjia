@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>车辆组录入</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <form class="layui-form">
+          <fieldset class="layui-elem-field">
+        <legend>车辆组编辑</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label required">车辆组编号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="carGroupId"    placeholder="请输入车辆组编号"   lay-verify="required" autocomplete="off"  class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">车辆组名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="carGroupName"   placeholder="请输入车辆组名称" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">车辆组级别</label>
+                    <div class="layui-input-inline">
+                        <select name="carGroupLevel" lay-verify="required">
+                          <option value="1">默认</option>  
+                          <option value="0">非默认</option>                            
+                        </select>
+                    </div>
+                </div>
+                
+
+            </div>
+        </div>
+    </fieldset>
+    <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+        <div class="layui-inline">
+            <button class="layui-btn layui-btn-small" lay-submit="" lay-filter="car_group_add">提交</button>
+        </div>
+        <div class="layui-inline">
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-small" >重置</button>
+        </div>
+    </div>
+    </form>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','ajax'], function (){
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+
+        form.on('submit(car_group_add)',function(data){
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            ajax.post(
+                    global.host+"api/operation/doAddCarGroup.htm",data.field,function(result){              
+                    	   var info="";
+                    	   var obj=eval(result);
+                           if(obj.result==false){
+                           	 info="车辆组添加失败";
+                            }else{
+                           	 info="车辆组添加成功";
+                            }
+                         window.location.reload();
+                         window.parent.layer.msg(info);
+                    });
+            return false;
+        });
+       
+    });
+    
+</script>
+</body>
+
+</html>

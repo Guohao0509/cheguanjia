@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>电子围栏编辑</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <form class="layui-form" id="J_edit_form">
+
+    </form>
+</div>
+<script type="text/html" id="J_edit_form_tpl">
+    <input type="hidden" name="fenceId" value="{{d.fenceId}}">
+    <fieldset class="layui-elem-field">
+        <legend>电子围栏编辑</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label required">围栏名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="fenceName" value="{{d.fenceName}}"   placeholder="请输入围栏名称" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">围栏半径</label>
+                    <div class="layui-input-inline">
+                        <input type="number" name="fenceArea" value="{{d.fenceArea}}"  placeholder="围栏半径(m)" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">开始时间</label>
+                    <div class="layui-input-inline">
+                        <input type="time" name="fenceStartTime" value="{{d.fenceStartTime}}"  placeholder="为空则表示不和车辆绑定" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">结束时间</label>
+                    <div class="layui-input-inline">
+                        <input type="time" name="fenceEndTime"  value="{{d.fenceEndTime}}"  placeholder="请输入车牌号" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">监控类型</label>
+                    <div class="layui-input-inline">
+                        <select name="fenceType" lay-verify="required">
+                            <option {{# if(d.fenceType==0){ }}selected="selected"{{#} }} value="0">驶入驶出监控</option>
+                            <option {{# if(d.fenceType==1){ }}selected="selected"{{#} }} value="1">驶入监控</option>
+                            <option {{# if(d.fenceType==2){ }}selected="selected"{{#} }} value="2">驶出监控</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">监控状态</label>
+                    <div class="layui-input-inline">
+                        <select name="fenceStatus" lay-verify="required">
+                            <option {{# if(d.fenceType==1){ }}selected="selected"{{#} }} value="1">开启</option>
+                            <option {{# if(d.fenceType==0){ }}selected="selected"{{#} }} value="0">停用</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+        <div class="layui-inline">
+            <button type="button" class="layui-btn layui-btn-small" lay-submit="" lay-filter="fence_edit">提交</button>
+        </div>
+        <div class="layui-inline">
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-small" >重置</button>
+        </div>
+    </div>
+</script>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','laydate','upload','ajax','laytpl'], function (){
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+        var laytpl = layui.laytpl;
+        //编辑模版
+        var editFormTpl = document.getElementById("J_edit_form_tpl").innerHTML;
+        //车辆信息
+        var carInfo = JSON.parse(decodeURI(getSearchString("fence")));
+        //同步渲染 编辑表单
+        document.getElementById("J_edit_form").innerHTML = laytpl(editFormTpl).render(carInfo);
+        form.render();
+        form.on('submit(fence_edit)',function(data){
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            ajax.post(
+                    global.host+"api/operation/doUpdateFenceRule.htm",data.field,function(){
+                        window.parent.layer.msg("围栏更新成功");
+                    });
+            return false;
+        });
+    });
+</script>
+</body>
+
+</html>

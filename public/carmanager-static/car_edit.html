@@ -1,0 +1,330 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>车辆编辑</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <form class="layui-form" id="J_edit_form">
+
+    </form>
+</div>
+<script type="text/html" id="J_edit_form_tpl">
+    <!--由于数据模型变更，这里的一些数据默认固定值，用隐藏域提交-->
+    <input type="hidden" name="city" value="默认">
+    <input type="hidden" name="rentPrice" value="0">
+    <input type="hidden" name="maxDayFee" value="0">
+    <input type="hidden" name="rentPriceMinute" value="0">
+    <input type="hidden" name="licensPhoto" value="无">
+    <input type="hidden" name="rentPriceNight" value="0">
+    <input type="hidden" name="minRentPrice" value="0">
+    <input type="hidden" name="carId" value="{{d.carId}}">
+    <fieldset class="layui-elem-field">
+        <legend>基础信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label required">车牌号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="plateNum" value="{{d.plateNum}}"   placeholder="请输入车牌号不要有空格" lay-verify="required|plateNum_format" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">品牌型号</label>
+                    <div class="layui-input-inline">
+                        <select name="carRuleName" id="J_brand" lay-verify="required" >
+
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">能源类型</label>
+                    <div class="layui-input-inline">
+                        <select name="powerType" lay-verify="required">
+                            <option {{# if(d.powerType==0){ }}selected="selected"{{#} }}  value="0">电动</option>
+                            <option {{# if(d.powerType==1){ }}selected="selected"{{#} }}  value="1">油动</option>
+                            <option {{# if(d.powerType==2){ }}selected="selected"{{#} }}  value="2">混合</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label ">车架号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="vin" value="{{d.vin}}"   placeholder="请输入车架号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">发动机号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="engineNumber" value="{{d.engineNumber}}"  placeholder="请输入发动机号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">当前公里数</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="currentKM" value="{{d.currentKM}}" lay-verify="required|number"  placeholder="请输入当前公里数" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-inline">
+                    <label class="layui-form-label required">购买日期</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="buyDate" id="intoServTime" value="{{d.buyDate}}" lay-verify="required" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input" >
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">车辆类型</label>
+                    <div class="layui-input-inline">
+                        <select name="carType" lay-verify="required">
+                            <option {{# if(d.carType==0){ }}selected="selected"{{#} }}  value="0">商务</option>
+                            <option {{# if(d.carType==1){ }}selected="selected"{{#} }}  value="1">经济</option>
+                            <option {{# if(d.carType==2){ }}selected="selected"{{#} }}  value="2">高档</option>
+                            <option {{# if(d.carType==3){ }}selected="selected"{{#} }}  value="3">大巴</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">车辆状态</label>
+                    <div class="layui-input-inline">
+                      <select name="rentStatus">
+                          <option {{# if(d.rentStatus==0){ }}selected="selected"{{#} }} value="0">可租用</option>
+                          <option {{# if(d.rentStatus==1){ }}selected="selected"{{#} }} value="1">已预订</option>
+                          <option {{# if(d.rentStatus==2){ }}selected="selected"{{#} }} value="2">租用中</option>
+                          <option {{# if(d.rentStatus==3){ }}selected="selected"{{#} }} value="3">暂停租用</option>
+                      </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">车辆组</label>
+                    <div class="layui-input-inline">
+                        <select name="carGroupId" id="J_carGroupId" lay-verify="required" data-value="{{d.carGroupId}}">
+
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">车辆权属</label>
+                    <div class="layui-input-inline">
+                        <input type="text"  name="carOwner" placeholder="请输入车辆权属"  value="{{d.carOwner}}" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">所属站点</label>
+                    <div class="layui-input-inline">
+                        <select name="station" id="station">
+
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">备注</label>
+                    <div class="layui-input-inline" style="width: 504px;">
+                        <input type="text"  name="remark" placeholder="备注信息" value="{{d.remark}}"   autocomplete="off"  class="layui-input">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </fieldset>
+    <fieldset class="layui-elem-field">
+        <legend>上传信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">车辆外观</label>
+                     <div class="layui-input-inline">
+                       <img src="{{dictionary.IMAGE_FOR_CAR(d.photo)}}" width="110px" height="60px" id="img_showImage">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">行车证照片</label>
+                     <div class="layui-input-inline">
+                       <img src="{{dictionary.IMAGE_FOR_CAR(d.licensePhoto)}}" width="110px" height="60px"  id="img_lincePhont">
+                      </div>
+                     </div>
+            </div>
+             <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label"></label>
+                    <input type="hidden" name="photo" id="hshowImage">
+                    <div class="layui-input-inline" id="showContiner">
+                        <input type="file"  name="upfile" id="showImage" class="layui-upload-file">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label"></label>
+                    <input type="hidden" name="licensePhoto" id="hlincePhont" >
+                    <div class="layui-input-inline" id="linceContiner">
+                        <input type="file"  name="upfile" id="lincePhont" class="layui-upload-file">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    <fieldset class="layui-elem-field">
+        <legend>维护信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">年检周期</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="maintenaceCycle" value="{{d.maintenaceCycle}}" autocomplete="on" class="layui-input" >
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">保养周期</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="maintPeriod" value="{{d.maintPeriod}}" autocomplete="on" class="layui-input" >
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+        <div class="layui-inline">
+            <button type="button" class="layui-btn layui-btn-small" lay-submit="" lay-filter="car_edit">提交</button>
+        </div>
+        <div class="layui-inline">
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-small" >重置</button>
+        </div>
+    </div>
+</script>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+
+<script>
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','laydate','upload','ajax','laytpl','dictionary'], function (){
+        var laytpl = layui.laytpl;
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+        form.verify({
+            plateNum_format : [/^[\u4e00-\u9fa5]{1}[A-Z]{1}[A-Z_0-9]{5,6}$/, '请输入正确的车牌号'],
+            vin_format: [/^([0-9A-Z]){17}$/,'请输入正确的车架号']
+        });
+        window.dictionary = layui.dictionary();
+        //编辑模版
+        var editFormTpl = document.getElementById("J_edit_form_tpl").innerHTML;
+        //车辆信息
+        var carInfo = JSON.parse(decodeURI(getSearchString("carInfo")));
+        //同步渲染 编辑表单
+        document.getElementById("J_edit_form").innerHTML = laytpl(editFormTpl).render(carInfo);
+        var carRuleList = global.userInfo.carRuleList;
+        //异步渲染select
+        var select_index;
+        for (var i = 0; i < carRuleList.length; i++) {
+            if(carRuleList[i].trim()==(carInfo.brand+","+carInfo.model).trim()){
+                select_index=i;
+            }
+            $("#J_brand").append("<option value=" + carRuleList[i]+ ">" +carRuleList[i].split(",")[0]+carRuleList[i].split(",")[1]+ "</option>");
+        }
+        $('#J_brand').val(carRuleList[select_index]);
+        ajax.post(
+                global.host+"api/operator/getCarGroupList.htm",{
+                    operatorId: global.userInfo.operatorId,
+                    carGroupName:''
+                },function(data){
+                    for (var i = 0; i < data.rows.length; i++) {
+                        $("#J_carGroupId").append("<option value=" + data.rows[i].carGroupId + ">" +data.rows[i].carGroupName + "</option>");
+                    }
+                    form.render();
+                });
+        ajax.post( global.host+"api/trade/getCarstationList.htm",{
+            operatorId: global.userInfo.operatorId,
+        },function(data){
+            var selectIndex=-1;
+            for (var i = 0; i < data.length; i++) {
+                if(data[i].stationId==carInfo.stationId){
+                    selectIndex=i;
+                }
+                $("#station").append("<option value="+ data[i].stationId+","+data[i].staName+">" +data[i].staName + "</option>");
+            }
+            if(selectIndex!=-1){
+                $("#station").val(data[selectIndex].stationId+","+data[selectIndex].staName);
+            }else{
+                $("#station").prepend('<option value="">请选择站点</option>');
+                $("#station").val('')
+            }
+            form.render();
+        })
+
+        //文件上传插件初始化
+        layui.upload({
+        	elem:"#showImage"
+            ,url: global.host+"api/util/uploadByStream"
+            ,success: function(res){
+               $("#img_showImage").attr("src",res.data);
+               $("#hshowImage").val(res.data);              
+            }
+        }); 
+        layui.upload({
+        	elem:"#lincePhont"
+            ,url: global.host+"api/util/uploadByStream"
+            ,success: function(res){
+            	$("#img_lincePhont").attr("src",res.data);
+                 $("#hlincePhont").val(res.data);  
+            }
+        });    
+        form.on('submit(car_edit)',function(data){
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            ajax.post(
+                    global.host+"api/operation/doUpdateCar.htm",data.field,function(result){
+                        //window.location.reload();
+                        if(eval(result)==true){
+                          window.parent.layer.msg("车辆更新成功");
+                        }else{
+                        	window.parent.layer.msg("车辆更新失败");
+                        }
+                       
+                    });
+            return false;
+        });
+        $('#intoServTime').on('click',function(){
+        	layui.laydate({
+        		elem:this
+        	    ,min:''
+        	    ,max:dataToString() 
+        	 });
+        })
+        $('button[type="reset"]').click(function(){
+        	$('#hshowImage').val("");
+        	$('#hlincePhont').val("");
+        	$('#img_showImage').attr("src",dictionary.IMAGE_FOR_CAR(carInfo.photo));
+        	$('#img_lincePhont').attr("src",dictionary.IMAGE_FOR_CAR(carInfo.licensePhoto));
+       });
+    });
+     function dataToString(){
+ 	   var date = new Date(); 
+ 	   var mon = date.getMonth() + 1;
+ 	   var day = date.getDate();
+ 	   return date.getFullYear() + "-" +mon+ "-" +day;
+    }
+</script>
+</body>
+
+</html>

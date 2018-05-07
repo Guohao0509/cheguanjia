@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>轨迹回放</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+    <style>
+        html,body{width:100%;height:100%;}
+        .main{height:100%;position:relative}
+        .map-box{position: absolute;left:0;top:0;right:0;bottom:0}
+        /*轨迹播放相关样式*/
+        .right-container{font-size: 14px;  color: rgb(86, 86, 86);}
+        #map_canvas{width:100%;height:100%;}
+        #J_pause_btn{display: none;}
+        .play-layer{z-index: 9999;background-color: #ffffff;position: absolute;bottom:10px;left: 10px;padding: 10px;box-shadow: 1px 2px 1px rgba(0,0,0,.1);cursor: move;}
+        .follow-marker{width: 52px;height: 26px;position: relative;}
+        .follow-marker-info{top:-150px;width: 200px;background-color: #fff;position: absolute;padding: 10px;left: 50%;margin-left: -100px;box-shadow: 1px 2px 1px rgba(0,0,0,.1);}
+        .follow-marker-info span{color: #222;}
+        .stop-marker{width: 30px;height: 40px;color: #2D93CA;font-size: 24px;position: relative;text-align: center;}
+        .stop-marker-info{padding: 5px;position: absolute;top: -30px;left: -50%;margin-left: -30px;background-color: #fff;box-shadow: 1px 2px 1px rgba(0,0,0,.1);font-size: 12px;color: #000;width: 80px;}
+        .green{color: #4cae4c!important;}
+        .yellow{color: sandybrown!important;;}
+        .red{color: #d9534f!important;}
+        .play-btn{color: #333;font-size: 18px;line-height:24px;vertical-align: middle;margin: 0;padding: 0;}
+        .play-btn .fa{width: 30px;text-align: center;}
+        #J_play_sp_select{line-height: 24px;display: inline-block;height: 24px;border:none;}
+        .progress-bar{height:8px;display: inline-block;background: #ccc;width: 170px;position: relative;margin-right: 50px;}
+        .progressing{position: absolute;left: 0;width: 0px;background: #009f95;height: 8px;top:0px;}
+        #J_progress_val{position: absolute;right: -50px;top:-3px;}
+        .fast-marker{width: 30px;height: 40px;color:#d9534f;;font-size: 24px;position: relative;text-align: center;}
+        .fast-marker-info{padding: 5px;position: absolute;top: -30px;left: -50%;margin-left: -30px;background-color: #fff;box-shadow: 1px 2px 1px rgba(0,0,0,.1);font-size: 12px;color: #d9534f;width: 80px;}
+        .play-settings-layer{padding:15px;box-shadow: 1px 2px 1px rgba(0,0,0,.1);position:absolute;top:10px;left:10px;background-color:#fafafa;}
+        .play-settings-layer h3{}
+        .play-settings-layer .form-group-h{padding-bottom:10px;}
+        /*搜索条件框*/
+        .search-form{
+            z-index: 9999;background-color: #ffffff;position: absolute;top:0px;left: 0px;padding:2px 10px 2px 0;box-shadow: 1px 2px 1px rgba(0,0,0,.1);
+        }
+    </style>
+</head>
+<div class="main">
+    <div class="map-box" id="J_map_box"></div>
+    <!--条件筛选框-->
+    <div class="search-form">
+        <form class="layui-form" id="J_edit_form">
+            <input type="hidden" name="speed" value="0">
+            <div class="layui-inline">
+                <label class="layui-form-label required">开始时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="J_start_time_input" value="" class="layui-input" onclick="layui.laydate({elem: this,istime: true,format: 'YYYY-MM-DD hh:mm:ss'})">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label required">结束时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="J_end_time_input" class="layui-input" onclick="layui.laydate({elem: this,istime: true,format: 'YYYY-MM-DD hh:mm:ss'})">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <button type="button" class="layui-btn layui-btn-small" id="J_query_button" >查询轨迹</button>
+            </div>
+        </form>
+    </div>
+    <!--播放控制器-->
+    <div class="play-layer">
+        <a href="javascript:;" class="play-btn" title="快退" id="J_rewind_btn"><i class="fa fa-backward" aria-hidden="true"></i></a>
+        <a href="javascript:;" class="play-btn" title="开始播放" id="J_start_btn"><i class="fa fa-play" aria-hidden="true"></i></a>
+        <a href="javascript:;" class="play-btn" title="暂停" id="J_pause_btn" ><i class="fa fa-pause" aria-hidden="true"></i></a>
+        <a href="javascript:;" class="play-btn" title="快进" id="J_forward_btn"><i class="fa fa-forward" aria-hidden="true"></i></a>
+        <a href="javascript:;" class="play-btn" title="停止" id="J_stop_btn"><i class="fa fa-stop" aria-hidden="true"></i></a>
+        <select id="J_play_sp_select">
+            <option value="0.5">播放速度 X0.5</option>
+            <option value="1">播放速度 X1</option>
+            <option value="10">播放速度 X5</option>
+            <option value="10">播放速度 X10</option>
+            <option value="20">播放速度 X20</option>
+            <option value="30" selected>播放速度 X30</option>
+        </select>
+        <div class="progress-bar" id="J_progress_bar">
+            <div id="J_progressing" class="progressing"></div>
+            <div id="J_progress_val">0%</div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script type="text/javascript" src="http://webapi.amap.com/maps?v=1.3&key=1a5cdec55ebac9dbd85652429f54d4d1"></script>
+<!--提示框模板-->
+<script type="text/html" id="J_car_tip_tpl">
+    <p><span>{{d.CURRNTPLACE}}</span></p>
+    <p>速度: <span>{{d.CURRENTSPEED.toFixed(1)}} KM/H</span>&nbsp;&nbsp;&nbsp;
+        {{# if(d.CURRENTSOC>=80){ }}
+        电量: <span class="green">{{d.CURRENTSOC}}%</span></p>
+    {{# }else if(d.CURRENTSOC>=20){ }}
+    电量: <span class="yellow">{{d.CURRENTSOC}}%</span></p>
+    {{# }else{ }}
+    电量: <span class="red">{{d.CURRENTSOC}}%</span></p>
+    {{#} }}
+    <p>总里程: <span>{{d.TOTALMILLEAGE}} KM</span></p>
+    <p>时间: <span>{{dateFormat(d.RECTIME.$numberLong)}}</span></p>
+</script>
+<script>
+    function dateFormat(longTime){
+        var date = new Date(parseInt(longTime));
+        return date.getFullYear()+"-"+(parseInt(date.getMonth())+1)+"-"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
+    }
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['dictionary','ajax','laytpl','laydate'], function () {
+        window.dictionary = layui.dictionary()
+        var $ = layui.jquery;
+        var laydate = layui.laydate;
+        var ajax = layui.ajax();
+        var laytpl = layui.laytpl;
+        //获取车辆编号
+        var carId = getSearchString("carId");
+        //获取轨迹播放开始时间
+        var now = new Date().getTime();
+        var startTime = getSearchString("startTime");
+        var endTime = getSearchString("endTime");
+        //设置时间到搜索条件框
+        if(startTime==undefined){
+            startTime = now-3600*1000*24*1;
+        }
+        if(endTime==undefined){
+            endTime = now;
+        }
+        $("#J_start_time_input").val(dateFormat(startTime));
+        $("#J_end_time_input").val(dateFormat(endTime));
+        //获取车辆的轨迹数据
+        var web = {
+            init:function(){
+                //初始化地图标注
+                web.markers = [];
+                //定义播放速度 1 表示以正常速度播放，2表示以2倍速度播放，0.5表示减速0.5倍播放，以此类推
+                web.playSpeed = $("#J_play_sp_select").val();
+                //初始化高德地图
+                web.map = new AMap.Map('J_map_box', {
+                    zooms:[1,18],
+                    zoom:4,
+                    center: [116.397428, 39.90923]
+                })
+                //绑定事件
+                web.bindUI();
+            },
+            drawRoute:function(data){
+                if(web.route){
+                    web.route.setMap(null);
+                }
+                var poiArray = [];
+                for(var i = 0;i<data.length;i++){
+                    poiArray.push([data[i].GDLNG,data[i].GDLAT]);
+                }
+                //处理数据
+                web.poiArray = poiArray;
+                //完成绘图
+                web.route = new AMap.Polyline({
+                    map: web.map,
+                    path: poiArray,
+                    strokeColor: "#00A",  //线颜色
+                    strokeOpacity: 1,     //线透明度
+                    strokeWeight: 3,      //线宽
+                    strokeStyle: "solid"  //线样式
+                });
+                web.map.setFitView();
+
+            },
+            bindUI:function(){
+                $("#J_start_btn").on("click",function(){
+                    web.startPlay();
+                });
+                $("#J_pause_btn").on("click",function(){
+                    $("#J_pause_btn").hide();
+                    $("#J_start_btn").show();
+                    web.pausePlay();
+                });
+                $("#J_stop_btn").on("click",function(){
+                    $("#J_pause_btn").hide();
+                    $("#J_start_btn").show();
+                    web.stopPlay();
+                });
+                $("#J_forward_btn").on("click",function(){
+                    $("#J_pause_btn").hide();
+                    $("#J_start_btn").show();
+                    web.forwardPlay();
+                });
+                $("#J_rewind_btn").on("click",function(){
+                    $("#J_pause_btn").hide();
+                    $("#J_start_btn").show();
+                    web.rewindPlay();
+                });
+                $("#J_play_sp_select").on("change",function(){
+                    web.pausePlay();
+                    web.playSpeed = $(this).val();
+                    web.startPlay();
+                });
+                //绑定开始时间选择器事件
+                $("#inpstart").click(function(){
+                    laydate(web.startTime);
+                });
+                //绑定结束时间选择器事件
+                $("#inpend").click(function(){
+                    laydate(web.endTime);
+                });
+                //绑定生成轨迹按钮的事件
+                $("#J_play_settings_submit").click(function(){
+                    page.renderCarHistorical();
+                });
+            },
+
+            /**
+             * 播放器初始化
+             */
+            initPlayer:function(data){
+                if(data.length<=0){
+                    layer.msg("未找到该车辆的OBD数据，请检查查询条件");
+                }else{
+                    $("#J_pause_btn").hide();
+                    $("#J_start_btn").show();
+                    //播放器播放的标志,true表示播放，false表示暂停
+                    web.playFlag = false;
+                    //设置绘图偏移量
+                    web.i = 0;
+                    //初始化绘图数据
+                    web.data = data;
+
+                    //设置最大绘图长度
+                    web.len = data.length-1;
+                    //清空地图标注
+                    web.removeMarkers();
+                    if(web.car){
+                        web.car.setMap(null);
+                    }
+                    if(web.followPoint){
+                        web.followPoint.setMap(null);
+                    }
+                    web.car = new AMap.Marker({ //添加自定义点标记
+                        map: web.map,
+                        icon: "images/car3.png",
+                        offset: new AMap.Pixel(-29, -14),
+                        position:new AMap.LngLat(data[0].GDLNG,data[0].GDLAT),
+                        extData:data[web.i],
+                        autoRotation: true
+                    });
+                    //初始化车辆角度
+                    web.car.setAngle(web.rotationTranslate(data[0].TRAVELDIR));
+                    //设置跟随点，用来跟随汽车的文字提示信息，之所以要启用一个点去跟随汽车，是因为无法将提示框信息放在汽车的容器中，汽车容器会旋转，无法解决子元素不旋转的问题
+                    web.followPoint =new AMap.Marker({ //添加自定义点标记
+                        map: web.map,
+                        offset: new AMap.Pixel(-14, -29),
+                        position:new AMap.LngLat(data[0].GDLNG,data[0].GDLAT),
+                        content:"<div class='follow-marker'><div class='follow-marker-info' id='J_car_tip'></div></div>"
+                    });
+                    //初始化车辆数据
+                    window.setTimeout(function(){
+                        web.updateCarData();
+                    },1000);
+
+                    //给车辆绑定事件
+                    AMap.event.addListener(web.car,'moving',function(event){
+                        //动态更新跟随点
+                        web.followPoint.setPosition(web.car.getPosition());
+                        //更新地图的位置
+                    });
+                    AMap.event.addListener(web.car,'moveend',function(event){
+                        web.i++;
+                        web.carMove();
+                    });
+                    web.dragPlayLayer();
+                }
+            },
+            /**
+             * 开始播放
+             */
+            startPlay:function(){
+                if(web.i==web.len){
+                    web.initPlayer(web.data);
+                }
+                //重置播放器播放标志
+                $("#J_start_btn").hide();
+                $("#J_pause_btn").show();
+                web.playFlag=true;
+                web.carMove();
+            },
+            /**
+             * 暂停播放
+             */
+            pausePlay:function(){
+                web.playFlag=false;
+                web.car.stopMove();
+            },
+            /**
+             * 车辆移动 只专注车辆的移动
+             */
+            carMove:function(){
+                if(web.i<web.len){
+                    if(web.playFlag){
+                        var currentPoint = web.data[web.i];
+                        var nextPoint =web.data[web.i+1];
+                        var nextLngLat = new AMap.LngLat(nextPoint.GDLNG,nextPoint.GDLAT);
+                        //获取当前点的时段
+                        var currentTime = currentPoint.RECTIME.$numberLong;
+                        var stopFlag = false;//决定是否停车的标志
+                        while(currentPoint.CURRENTSPEED==0||currentPoint.CURRENTSPEED==2){
+                            //表示此处停车了
+                            stopFlag = true;
+                            //继续判断下一个点是不是停车,
+                            if(web.i<web.len-1){
+                                web.i++;
+                                //更新进度条
+                                web.updateProgress();
+                                //更新当前和下一个点
+                                currentPoint = web.data[web.i];
+                                nextPoint =web.data[web.i+1];
+                                nextLngLat = new AMap.LngLat(nextPoint.GDLNG,nextPoint.GDLAT);
+                            }else{
+                                currentPoint = web.data[web.i];
+                                nextPoint =web.data[web.i+1];
+                                nextLngLat = new AMap.LngLat(nextPoint.GDLNG,nextPoint.GDLAT);
+                                //终止死循环
+                                web.data[web.i].CURRENTSPEED=5;
+                                //web.stopPlay();
+                            }
+                        }
+                        if(stopFlag){
+                            //每次i++都要重新改变自身数据,暂停时，车辆的速度应该为上一个点的速度
+                            web.i--;
+                            web.updateCarData();
+                            web.i++;
+                            //前面产生停车了，计算停车时间
+                            var stopTimeLong = currentPoint.RECTIME.$numberLong-currentTime;
+                            //添加地图标注，表示车辆停车了
+                            web.addMarker({
+                                type:0,
+                                GDLNG:web.data[web.i-1].GDLNG,
+                                GDLAT:web.data[web.i-1].GDLAT,
+                                stopTimeLong:stopTimeLong/60000
+                            });
+                            stopTimeLong=(currentPoint.RECTIME.$numberLong-currentTime)/web.playSpeed
+                            if(stopTimeLong>2000){
+                                //最多只停车2秒钟,会标记在此处停车了几分钟
+                                stopTimeLong=2000;
+                            }
+                            //休息响应的时间
+                           window.setTimeout(function(){
+                                web.updateCarData();
+                                if(nextLngLat.getLng()!=currentPoint.GDLNG||nextLngLat.getLat()!=currentPoint.GDLAT){
+                                    nextLngLat=new AMap.LngLat(nextLngLat.getLng()+0.0001,nextLngLat.getLat());
+                                }
+                               console.log(nextLngLat);
+                                web.car.moveTo(nextLngLat,currentPoint.CURRENTSPEED*web.playSpeed);
+                            },stopTimeLong);
+                        }else{
+                            //不用休息，正常移动
+                            web.updateCarData();
+                            if(nextLngLat.getLng()!=currentPoint.GDLNG||nextLngLat.getLat()!=currentPoint.GDLAT){
+                                nextLngLat=new AMap.LngLat(nextLngLat.getLng()+0.0001,nextLngLat.getLat());
+                            }
+                            console.log(nextLngLat);
+                            web.car.moveTo(nextLngLat,currentPoint.CURRENTSPEED*web.playSpeed);
+                        }
+                    }
+                }else{
+                    //播放结束，按钮归位
+                    $("#J_pause_btn").hide();
+                    $("#J_start_btn").show();
+                    web.updateCarData();
+                }
+
+            },
+            /**
+             * 停止播放
+             */
+            stopPlay:function(){
+                //清空地图上面的车辆
+                web.pausePlay();
+                web.initPlayer(web.data);
+            },
+            /**
+             * 快进
+             */
+            forwardPlay:function(){
+                //先暂停播放
+                web.pausePlay();
+                if(web.i<web.len-1){
+                    web.i+=1;
+                }
+                //更新车辆位置
+                web.car.setPosition(new AMap.LngLat(web.data[web.i].GDLNG,web.data[web.i].GDLAT));
+                web.updateCarData();
+                //web.startPlay();
+            },
+            /**
+             * 快退
+             */
+            rewindPlay:function(){
+                //先暂停播放
+                web.pausePlay();
+                if(web.i>1){
+                    web.i-=1;
+                }
+                web.car.setPosition(new AMap.LngLat(web.data[web.i].GDLNG,web.data[web.i].GDLAT));
+                web.updateCarData();
+                //web.startPlay();
+            },
+            /**
+             * 更新地图上的车辆状态
+             */
+            updateCarData:function(){
+                var obj = {
+                    type:1,
+                    GDLNG:web.data[web.i].GDLNG,
+                    GDLAT:web.data[web.i].GDLAT,
+                    speed:web.data[web.i].CURRENTSPEED
+                }
+                web.addMarker(obj)
+                //速度较快时，缩小地图比例尺
+                if(obj.speed>55){
+                   // web.map.setZoom(14);
+                }else if(obj.speed>30){
+                    //速度较慢时，放大地图比例尺
+                    //web.map.setZoom(14);
+                }else{
+                    //web.map.setZoom(16);
+                }
+                //更新地图中心点
+                web.map.panTo(web.car.getPosition());
+                //更新进度条
+                web.updateProgress();
+                document.getElementById("J_car_tip").innerHTML = laytpl(document.getElementById("J_car_tip_tpl").innerHTML).render(web.data[web.i]);
+            },
+            /**
+             * 添加地图标注
+             */
+            addMarker:function(obj){
+                //判断标注标注类型
+                if(obj.type==0){
+                    if(obj.stopTimeLong>1){
+                        //表示停车
+                        var marker =new AMap.Marker({ //添加自定义点标记
+                            map: web.map,
+                            offset: new AMap.Pixel(-15, -20),
+                            position:new AMap.LngLat(obj.GDLNG,obj.GDLAT),
+                            content:'<div class="stop-marker">P<div class="stop-marker-info"><p>停车'+obj.stopTimeLong.toFixed(0)+'分钟</p></div></div>',
+                            extData:obj,
+                            zIndex:99
+                        });
+                        web.markers.push(marker);
+                    }
+                }else if(obj.type==1){
+                    //表示超速
+                    if(obj.speed>=80){
+                        //表示超速
+                        var marker =new AMap.Marker({ //添加自定义点标记
+                            map: web.map,
+                            offset: new AMap.Pixel(-15, -20),
+                            position:new AMap.LngLat(obj.GDLNG,obj.GDLAT),
+                            content:'<div class="fast-marker">P<div class="fast-marker-info"><p>'+obj.speed.toFixed(1)+'KM/H</p></div></div>',
+                            extData:obj,
+                            zIndex:99
+                        });
+                        web.markers.push(marker);
+                    }
+
+
+
+                }
+            },
+            removeMarkers:function(){
+                for(var i=0;i<web.markers.length;i++){
+                    web.markers[i].setMap(null);
+                }
+                web.markers=[];
+            },
+            updateProgress:function(){
+                //获取总进度条的长度
+                var progressWidth = $("#J_progress_bar").width();
+                var progressingRate = web.i/web.len;
+                var progressingWidth = progressWidth*(web.i/web.len);
+                $("#J_progressing").stop();
+                $("#J_progressing").animate({width:progressingWidth+"px"},100);
+                $("#J_progress_val").html(web.i+"/"+web.len);
+            },
+            /**
+             * 角度转换，高德地图的一个坑，高德地图自带的旋转车辆的功能，0度表示正东方向，而gps0度表示正北，高德自己的坐标系，0度也表示正北
+             * @param rotation
+             * @returns {*}
+             */
+            rotationTranslate:function(rotation){
+                if(rotation<90){
+                    rotation = 270+rotation;
+                }else{
+                    rotation-=90;
+                }
+                return rotation;
+            },
+            /**
+             * 格式化时间
+             * @param longTime
+             * @returns {string}
+             */
+            dateFormat:function(longTime){
+                var date = new Date(parseInt(longTime));
+                return date.getFullYear()+"年"+date.getMonth()+"月"+date.getHours()+":"+date.getMinutes();
+            },
+            /**
+             * 让播放进度条可拖拽
+             */
+            dragPlayLayer:function(){
+                $(".play-layer").mousedown(function(e){
+                    var offset = $(this).offset();
+                    var x = e.pageX - offset.left;
+                    var y = e.pageY - offset.top;
+                    $(this).css("bottom","inherit");
+                    $(this).css("cursor","move");
+                    $(this).css("top",offset.top+"px");
+                    $(document).bind("mousemove",function(ev){
+                        $(".play-layer").stop();
+                        var _x = ev.pageX - x;
+                        var _y = ev.pageY - y;
+                        if(_x>0&& _y>0){
+                            $(".play-layer").animate({left:_x+"px",top:_y+"px"},10);
+                        }
+
+                    });
+                });
+
+                $(document).mouseup(function(){
+                    $(".play-layer").css("cursor","default");
+                    $(this).unbind("mousemove");
+                })
+            }
+        };
+        //初始化web
+        web.init();
+        function refreshData(){
+            //获取内容
+            ajax.post( global.host+"api/operation/getCarHistorical",{
+                carId:carId,
+                startTime:new Date($("#J_start_time_input").val()).getTime(),
+                endTime:new Date($("#J_end_time_input").val()).getTime(),
+                speed:0
+            },function(data){
+                //对数据做预处理，格式转换
+                var array = [];
+                for(var i = 0;i<data.length;i++){
+                    var obj = JSON.parse(data[i]);
+                    //过滤掉错误的点
+                    if(!(obj.GDLNG==0&&obj.GDLAT==0)){
+                        array.push(obj);
+                    }
+                }
+                //完成路由绘制
+                web.drawRoute(array);
+                //初始化播放器
+                web.initPlayer(array);
+            });
+        }
+        //绑定查询时间
+        $("#J_query_button").click(function(){
+            refreshData();
+        });
+        refreshData();
+    });
+</script>
+</body>
+</html>

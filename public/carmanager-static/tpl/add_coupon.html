@@ -1,0 +1,37 @@
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space20" style="margin: 20px 0;">
+        <div class="layui-col-md3 codeAddCoupon">
+            <div class="coupon-wrapper"  style="height: 240px;">
+                <div class="coupon-add-icon">+</div>
+                <a class="coupon-add-btn">添加优惠券</a>
+            </div>
+        </div>
+        {{#  layui.each(d.rows, function(index, item){ }}
+        <div class="layui-col-md3">
+            <div class="coupon-wrapper"  style="height: 240px;">
+                <div class="layui-col-md9">
+                    <div class="coupon-price">
+                        <span class="coupon-value">{{ item.nominalValue }}</span>
+                        <span class="coupon-unit">{{ item.unit }}</span>
+                    </div>
+                    <div class="coupon-name">{{ item.name }}</div>
+                    <div class="coupon-rule">
+                        {{ item.instructions }}
+                    </div>
+                </div>
+                <div class="coupon-count layui-col-md3">
+                    <div class="count">
+                        <span class="num couponCount">{{ item.count }}</span><br><span class="unit">张</span><br>
+                        <span class="num editing"><input type="number" class="editCount" value='{{ item.count }}' style="width:100%;text-align:center;"/></span><br><span class="unit editing">张</span><br>
+                    </div>
+                    <a data-id='{{ item.crId }}' class="edit-count">修改</a>
+                    <a data-id='{{ item.crId }}' class="edit-count editing ensureEdit">确定修改</a>
+                </div>
+                <div class="coupon-button" style="width: 67%;">
+                    <div data-id='{{ item.crId }}' class="layui-btn layui-btn-mini layui-btn-danger deleteCoupon">删除</div>
+                </div>
+            </div>
+        </div>
+        {{#  }); }}
+    </div>
+</div> 

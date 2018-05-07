@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">车牌号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="plateNum"   placeholder="请输入车牌号不要有空格" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">品牌</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="brand"   placeholder="如江淮" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">型号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="model"   placeholder="如IEV" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">车辆状态</label>
+                    <div class="layui-input-inline">
+                        <select name="rentStatus">
+                            <option value="999">全部状态</option>
+                            <option value="0">可租用</option>
+                            <option value="1">已预订</option>
+                            <option value="2">租用中</option>
+                            <option value="3">暂停租用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">购买日期</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="price_min" placeholder="" autocomplete="off" class="layui-input" onclick="layui.laydate({elem: this})">
+                    </div>
+                    <div class="layui-form-mid">-</div>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="price_max" placeholder="" autocomplete="off" class="layui-input" onclick="layui.laydate({elem: this})">
+                    </div>
+                </div>
+
+            </div>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small"  id="J_add_button">添加车辆</button>
+                </div>
+            </div>
+        </form>
+    </fieldset>
+    <div id="content" style="width: 100%;height: 533px;"></div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable', 'form','laydate','dictionary'], function () {
+        var btable = layui.btable(),
+                $ = layui.jquery,
+                layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+                form = layui.form(),
+                dictionary = layui.dictionary();
+        var parmas = {
+            t: new Date().getTime(),
+            operatorId:global.userInfo.operatorId
+        };
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/operation/getCarList',
+            pageSize: 10,
+            params: parmas,
+            columns: [{
+                fieldName: '车牌号',
+                field: 'plateNum',
+                sortable: true
+            },{
+                fieldName: '品牌',
+                field: 'brand',
+                sortable: true
+            }, {
+                fieldName: '型号',
+                field: 'model',
+                sortable: true
+            },{
+                fieldName: '车架号',
+                field: 'vin',
+                sortable: true
+            }, {
+                fieldName: '车辆组',
+                field: 'carGroupName'
+            }, {
+                fieldName: '年检日期',
+                field: 'maintenaceCycle'
+            }, {
+                fieldName: 'gps坐标',
+                field: 'latitude',
+                format:function(val,obj){
+                    var html = '<a href="javascript:;" style="width: 100%;display: inline-block;text-align: center;" data-lnglat="'+obj.longitude+','+obj.latitude+'"><span class="fa fa-map-marker"></span></a>';
+                    return html;
+                }
+            }, {
+                fieldName: '状态',
+                field: 'carStatus',
+                format:function(val){
+                    return dictionary.CAR_STATUS(val);
+                }
+            }, {
+                fieldName: '操作',
+                field: 'carId',
+                format: function (val,obj) {
+                    var html = '<input type="button" value="编辑" data-action="edit" data-id="' + val + '" data-platenum="'+obj.plateNum+'编辑" class="layui-btn layui-btn-mini" /> ' +
+                            '<input type="button" value="删除" data-action="del" data-id="' + val + '" class="layui-btn layui-btn-mini layui-btn-danger" />'+
+                            '<input type="button" value="详情" data-action="del" data-id="' + val + '" class="layui-btn layui-btn-mini layui-btn-normal" />';
+                    return html;
+                }
+            }],
+            even: true,
+            //skin: 'row',
+            checkbox: false,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td:last-child').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        var id = $that.data('id');
+                        var platenum = $that.data('platenum');
+                        $that.on('click', function () {
+                            switch (action) {
+                                case 'edit':
+                                    parent.tab.tabAdd({
+                                        href: "car_add.html?carid="+id, //地址
+                                        icon:"fa fa-pencil-square-o",
+                                        title:platenum
+                                    });
+                                    ;
+                                    break;
+                                case 'del': //删除
+                                    layerTips.msg(action + ":" + id);
+                                    break;
+                            }
+                        });
+                    });
+                });
+            }
+        });
+        btable.render();
+        //监听搜索表单的提交事件
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            btable.get(data.field);
+            return false;
+        });
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+
+        $("#J_add_button").on('click',function(){
+            parent.tab.tabAdd({
+                href: "car_add.html", //地址
+                icon:"fa fa-pencil-square-o",
+                title:'车辆录入'
+            });
+        });
+        $(window).on('resize', function (e) {
+            var $that = $(this);
+            $('#content').height($that.height() - 92);
+        }).resize();
+    });
+</script>
+</body>
+
+</html>

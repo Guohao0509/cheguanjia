@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <div id="content"></div>
+  <script>
+    
+    var MyTree = function () {
+      
+    }
+
+    MyTree.prototype = {
+      set: function (options) {
+        this.config = options;
+      },
+      getData: function (callback) {
+        var that = this;
+        ajax.post(that.config.url, that.config.params, function(data) {
+          that.config.data = data;
+          callback && callback(data);
+        });
+      },
+      creatHtml: function () {
+        this.nodeList('全部', this.config.data);
+      },
+      nodeList: function (parentNode, data) {
+        console.log(parentNode)
+        var that = this;
+        var tpl = '<div><input type="checkbox" lay-skin="primary">' + parentNode +'<div>'
+        for (var i = 0; i < data.length; i++) {
+          if (data[i].child) {
+             
+          } else {
+            tpl += '<input type="checkbox" lay-skin="primary">';
+            tpl += '<li>' + that.config.format(data[i]) +'</li>';
+          }
+        }
+        tpl += '</ul>';
+        return tpl;
+      },
+    }
+    var myTree = new MyTree();
+    myTree.set({
+      content: '#content',
+      data: [
+        {id: 1, name: '武汉站', child: [{id: 11, name: '合康变频'}, {id: 12, name: '梁山头站'}]},
+        {id: 2, name: '石家庄站', child: [{id: 21, name: '赵州桥'}, {id: 22, name: '石家庄站'}]},
+        {id: 3, name: '鄂州站'}
+      ],
+      format: function (data) {
+        return '<button>' + data.id + data.name + '</button>'
+      }
+    });
+    console.log(this.myTree.creatHtml());
+  </script>
+</body>
+</html>

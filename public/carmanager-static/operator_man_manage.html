@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">姓名</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="nickName"   placeholder="请输入姓名" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">手机号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="mobile"   placeholder="请输入手机号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small"  id="J_add_button">添加人员</button>
+                </div>
+                 <div class="layui-inline" id="export_select">
+                      
+                </div>
+                 <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="export_info" >导出信息</button>
+                </div>
+               
+            </div>
+        </form>
+    </fieldset>
+    <div id="content" style="width: 100%;height: 533px;"></div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable', 'form','laydate','ajax','dictionary'], function () {
+        var btable = layui.btable(),
+                $ = layui.jquery,
+                layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+                form = layui.form(),
+                ajax = layui.ajax(),
+                dictionary = layui.dictionary();
+       var parmas={
+           t: new Date().getTime(),
+           operatorId:global.userInfo.operatorId,
+           sysUserId:global.userInfo.sysUserId
+       }
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/system/getSysUserList.htm',
+            pageSize: 10,
+            params: parmas,
+            columns: [{
+                fieldName: '姓名',
+                field: 'nickName'
+            },{
+                fieldName: '手机号',
+                field: 'mobile'
+            },{
+                fieldName: '运营编号',
+                field: 'operatorId'
+            },
+             {
+                 fieldName: '管理区域',
+                 field: 'areaNames'
+             },
+               {
+                fieldName: '状态',
+                field: 'operatorStatus',
+                format:function(val){
+                    return dictionary.OPERATOR_STATUS(val);
+                } 
+            }, {
+                    fieldName: '位置',
+                    field: 'areas',
+                    format: function (val,obj) {
+                        var html = '<input type="button" value="位置" data-action="follow" data-id="' + val +'位置" data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-normal layui-btn-mini" /> ';
+                        return html;
+                    }
+                },
+                {
+                fieldName: '操作',
+                field: 'sysUserId',
+                format: function (val,obj) {
+                    var html = '<input type="button" value="发送邀请" data-action="send" data-id="' + val+'发送邀请" data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-normal layui-btn-mini" /> '+
+                        '<input type="button" value="编辑" data-action="edit" data-id="' + val +'编辑" data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-mini" />'+
+                        '<input type="button" value="删除" data-action="del" data-id="' + val +'删除" data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-mini layui-btn-danger" />';
+                    return html;
+                }
+            }],
+            even: true,
+            //skin: 'row',
+            checkbox: false,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        $that.on('click', function () {
+                            var data=JSON.parse($that.attr("data-obj"));
+                            var areaList=data.areaList;
+                            data.stationList=null;
+                            data.carRuleList=null;
+                            var newArray=[];
+                            for(var i=0;i<data.areaList.length;i++){
+                                var obj=new Object();
+                                obj.areaId=data.areaList[i].areaId;
+                                obj.areaName=data.areaList[i].areaName;
+                                obj.cityCode=data.areaList[i].cityCode;
+                                obj.areaCenter=data.areaList[i].areaCenter;
+                                obj.areaType=data.areaList[i].areaType;
+                                obj.areaStatus=data.areaList[i].areaStatus;
+                                newArray.push(obj);
+                            }
+                            data.areaList=newArray;
+                            data.areas=null;
+                            var jsonStr =encodeURI(JSON.stringify(data));
+                            switch (action) {
+                                case 'send':
+                                    ajax.post(global.host+"api/system/sms_inviate.htm",{mobile:data.mobile},function(data){
+                                        if(eval(data)==true){
+                                            layer.msg("发送邀请短信成功");
+                                        }else{
+                                            layer.msg("发送邀请短信失败");
+                                        }
+                                    });
+                                    break;
+                                case 'edit':
+                                    parent.tab.tabAdd({
+                                        href: 'operator_man_edit.html?sysUserInfo='+jsonStr, //地址
+                                        icon:"fa fa-pencil-square-o",
+                                        title:"运维人员编辑"
+                                    });
+                                    break;
+                                case 'follow': //
+                                    if(data.areaNames==""){
+                                        layer.msg("未绑定区域");
+                                    }else{
+                                        parent.tab.tabAdd({
+                                            href: 'operator_area_location.html?areaInfo='+encodeURI(JSON.stringify(newArray)), //地址
+                                            icon:"fa fa-pencil-square-o",
+                                            title:"位置查看"
+                                        });
+                                    }
+                                    break;
+                                case 'del': //删除
+                                    layer.confirm("确认要删除吗?", { title: "删除确认" }, function (index) {
+                                        layer.close(index);
+                                        ajax.post(global.host+"api/system/doDeleteSysUser.htm",{sysUserId:data.sysUserId, operatorId:global.userInfo.operatorId},function(data){
+                                            $that.parent().parent().remove();
+                                            layer.msg("删除成功");
+                                        });
+                                    });
+                                    break;
+                            }
+                        });
+                    });
+                });
+            }
+        
+        });
+        
+        btable.render();
+        //监听搜索表单的提交事件
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            btable.get(data.field);
+            return false;
+        });
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+        $("#J_add_button").on('click',function(){
+            parent.tab.tabAdd({
+                href: "operator_man_add.html", //地址
+                icon:"fa fa-pencil-square-o",
+                title:'添加运维人员'
+            });
+        });
+        $(window).on('resize', function (e) {
+            var $that = $(this);
+            $('#content').height($that.height() - 92);
+        }).resize();
+        //导出信息
+        $("#export_info").on("click",function(){
+        	var title="&&title=";//标题
+        	var titles=$(".layui-table").find("th");
+        	var limit_select=$('select[name="limit_select"]').val().split(",");
+        	var start="&&start="+limit_select[0];//开始条数
+        	var limit="&&limit="+limit_select[1];//
+        	for(var i=1;i<titles.length-2;i++){
+        		if(titles[i].innerHTML.indexOf("<")!=-1){
+        			title+=titles[i].innerHTML.substr(0,titles[i].innerHTML.indexOf("<"))+",";
+        		}else{
+        			title+=titles[i].innerHTML+",";
+        		}        		    
+        	}
+        	title=title.substr(0,title.length-1); 
+        	var param="";//导出条件
+        	$("#J_search_form").find("input[name],select[name]").each(function(){
+        		param+="&&"+$(this).attr("name")+"="+$(this).val();
+        	});
+        	var url=global.host+"api/util/export_to_xls?operatorId="+global.userInfo.operatorId+"&&sysUserId="+global.userInfo.sysUserId+"&&sql=SystemUser"+title+start+param+limit;
+        	window.location.href=url;        	
+        });
+    });
+
+      
+</script>
+</body>
+
+</html>

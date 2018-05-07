@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Table</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+    <div class="admin-main">
+        <form class="layui-form" id="J_edit_form">
+            
+        </form>
+    </div>
+<script type="text/html" id="editTemplate">
+    <fieldset class="layui-elem-field">
+        <legend>基本信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <label class="layui-form-label">活动标题</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="name" value="{{ d.name }}" class="layui-input" lay-verify="required">
+                </div>
+                <div class="layui-form-mid layui-word-aux">在领取网页的标题栏上显示</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">链接</label>
+                <div class="layui-input-inline" style="width:280px;">
+                    <input type="text" name="linkUrl" value="{{ d.linkUrl }}" disabled id="linkUrl" class="layui-input" lay-verify="required">
+                </div>
+                <div id="getLinkUrl" class="layui-form-mid layui-word-aux"><a class="coupon-add-a">重新生成</a>&nbsp;&nbsp;&nbsp;重新生成新的兑换链接后原链接会失效</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">开始有效时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="startTime" value="{{ d.startTime }}"  class="layui-input" id="startDate" placeholder="请输入开始时间" onclick="layui.laydate({elem: this, format: 'YYYY-MM-DD'})" lay-verify="required">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">失效时间</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="endTime" value="{{ d.endTime }}" class="layui-input" id="startDate" placeholder="请输入失效时间" onclick="layui.laydate({elem: this, format: 'YYYY-MM-DD'})" lay-verify="required">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">状态</label>
+                <div class="layui-input-block">
+                    <input type="radio" name="status" value="0" title="未激活" {{# if(d.status==0){ }}checked="true"{{#} }}>
+                    <input type="radio" name="status" value="1" title="已激活" {{# if(d.status==1){ }}checked="true"{{#} }}>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">最大兑换人数</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="maxNum" value="{{ d.maxNum }}" class="layui-input">
+                </div>
+                <div class="layui-form-mid layui-word-aux">人（每人只能够兑换一次）</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="layui-elem-field">
+        <legend>页面模板</legend>
+        <div id="pageTemplate"></div>
+    </fieldset>
+
+    <fieldset class="layui-elem-field">
+        <legend>添加优惠卷</legend>
+        <div id="content"></div>
+    </fieldset>
+    
+    <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+        <div class="layui-inline">
+            <button type="button" class="layui-btn layui-btn" lay-submit="" lay-filter="activity_add">提交</button>
+        </div>
+        <div class="layui-inline">
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn">重置</button>
+        </div>
+    </div>
+</script>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script type="text/html" id="tTemplate">
+    {{#  layui.each(d, function(index, item){ }}
+        <div class="templateItem" data-obj='{{ JSON.stringify(item) }}' style="border: 1px solid #ddd;">
+            <p>{{ item.linkUrl }}</p>
+            <p>{{ item.previewUrl }}</p>
+        </div>
+    {{#  }); }}
+</script> 
+<script>
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['form', 'ajax', 'laytpl', 'laydate', 'addCoupon'], function () {
+        var $ = layui.jquery;
+        var laydate = layui.laydate();
+        var ajax = layui.ajax();
+        var form = layui.form();
+        var laytpl = layui.laytpl;
+        var addCoupon = layui.addCoupon();
+        var template = {}; // 被选中的模板
+        
+        
+        var layerTips = parent.layer === undefined ? layui.layer : parent.layer; //获取父窗口的layer对象
+
+        // 已绑定的优惠卷列表
+        var couponList = {rows: []};
+        // 用来加在单个兑换码
+        var caId = decodeURI(getSearchString("caId"));
+        // 加载单个兑换码优惠卷详情
+        ajax.post(global.host+'api/trade/getOneCouponActivicty', {caId: caId}, function (result) {
+            // 加载数据，构造渲染所需的数据结构
+            console.log(result);
+            template = result.couponActivityTemplate;
+            for (var i = 0; i < result.couponRegulationNumList.length; i ++) {
+                result.couponRegulationNumList[i].couponRegulation.count =  result.couponRegulationNumList[i].num;
+                couponList.rows.push(result.couponRegulationNumList[i].couponRegulation);
+            }
+            // 渲染
+            var editTemplate = document.getElementById('editTemplate').innerHTML;
+            document.getElementById("J_edit_form").innerHTML = laytpl(editTemplate).render(result);
+            
+            // 渲染内容模板模块
+            ajax.post(global.host+'api/trade/getCouponActivictyTemplates', {}, function (result) {
+                console.log(result);
+                // 渲染界面
+                var tTemplate = document.getElementById('tTemplate').innerHTML;
+                document.getElementById("pageTemplate").innerHTML = laytpl(tTemplate).render(result);
+            });
+
+            form.render();
+
+            // 初始化渲染添加优惠卷的模块
+            addCoupon.set({
+                content: document.getElementById('content'),
+                data: couponList
+            });
+
+            // 当经过修改之后提交
+            form.on('submit(activity_add)', function(data) {
+                var  reqParams = data.field;
+                var couponRegulationNumList = [];
+                reqParams.description = '';
+
+                for (var i = 0; i < couponList.rows.length; i ++) {
+                    couponRegulationNumList.push({
+                        "couponRegulation":{"crId": couponList.rows[i].crId},
+                        "num": couponList.rows[i].count
+                    });
+                    reqParams.description += couponList.rows[i].name + couponList.rows[i].count + '张<br>';
+                }
+                reqParams.couponRegulationNumList = couponRegulationNumList;
+                reqParams.operatorId = global.userInfo.operatorId;
+                reqParams.couponActivityTemplate = {
+                    catId: template.catId
+                }
+                reqParams.caId = caId;
+                console.log(reqParams);
+                ajax.post(global.host+'api/trade/updateCouponActivicty', {couponActivicty: JSON.stringify(reqParams)}, function (result) {
+                    if(result){
+                        window.location.reload();
+                        layerTips.msg("活动红包修改成功");
+                    }else{
+                        layerTips.msg("活动红包修改失败");
+                    }
+                });
+            });
+
+            form.on('submit(reset)', function (data) {
+                window.setTimeout(function(){
+                    $('form.layui-form').find('button[lay-filter=search]').click();
+                },0);
+                return true;
+            }); 
+            
+            // 更换链接
+            function getLinkUrl() {
+                ajax.post(global.host + 'api/trade/getLinkUrl', {linkUrl: template.linkUrl}, function (result) {
+                    console.log(result);
+                    $('#linkUrl').val(result);
+                });
+            }
+            // 触发事件执行更换链接
+            $('#getLinkUrl').on('click', function () {
+                console.log(1)
+                // template 为此类中的template
+                getLinkUrl();
+            });
+
+            $('#pageTemplate').on('click', '.templateItem', function(e) {
+                template = JSON.parse($(this).attr('data-obj'));
+                
+                console.log(template);
+            });
+        });
+    });
+</script>
+</body>
+
+</html>

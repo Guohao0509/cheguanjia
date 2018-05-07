@@ -1,0 +1,497 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>添加站点</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+
+    <style type="text/css">
+        html,body{width:100%;height:100%}
+        .map-wrap{width:50%;height:100%;float: right;}
+        #position_select{z-index: 999;position: absolute;}
+        #station_info{float: left;width: 50%;}
+        ::-webkit-scrollbar{width:6px;}
+        ::-webkit-scrollbar-track{background-color:#fff;}
+        ::-webkit-scrollbar-thumb{background-color:#e0e0e0;}
+        ::-webkit-scrollbar-thumb:hover {background-color:#9c3}
+        ::-webkit-scrollbar-thumb:active {background-color:#fff}
+
+    </style>
+</head>
+<body>
+<form  class="layui-form" id="station_info">
+    <fieldset class="layui-elem-field">
+        <legend>基础信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label required">站点名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="staName"    placeholder="请输入站点名称" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">开放类型</label>
+                    <div class="layui-input-inline">
+                        <select name="styType" lay-verify="required">
+                            <option value="">请选择开放类型</option>
+                            <option value="0">对外开放站点</option>
+                            <option value="1">内部站点</option>
+                            <option value="2">企业站点</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">运营类型</label>
+                    <div class="layui-input-inline">
+                        <select name="oprType" lay-verify="required">
+                            <option value="">请选择运营类型</option>
+                            <option value="0">虚拟站点</option>
+                            <option value="1">实体站点</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">站点类型</label>
+                    <div class="layui-input-inline">
+                        <select name="dutyType" lay-verify="required">
+                            <option value="">请选择站点类型</option>
+                            <option value="0">有人值守站点</option>
+                            <option value="1">无人值守站点</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">站点所有人</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="staOwner"  placeholder="请输入站点所有人" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">联系电话</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="phone"  lay-verify="required"  placeholder="请输入站点联系电话" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">停车位数</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="parkingNum"  lay-verify="required|number"  placeholder="请输入停车位数" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">汽车数</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="carNum"  lay-verify="required|number"  placeholder="请输入汽车数" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">营业时间</label>
+                    <div class="layui-input-inline"  style="width: 100px;">
+                        <input type="text" name="serviceStart" id="serviceStart" placeholder="开始时间" lay-verify="required" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input" >
+                    </div>
+                    <div class="layui-form-mid">-</div>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="serviceEnd" id="serviceEnd" placeholder="结束时间" lay-verify="required" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input" >
+                    </div>
+                </div>
+                <div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">工作制</label>
+                    <div class="layui-input-inline">
+                        <select name="staHoliday" lay-verify="required">
+                            <option value="">请选择工作制</option>
+                            <option value="1">正常节假日</option>
+                            <option value="2">站点轮休</option>
+                        </select>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    <fieldset class="layui-elem-field">
+        <legend>上传信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                       <label class="layui-form-label"></label>
+                       <div class="layui-input-inline" id="showContiner">
+
+                       </div>
+                </div>
+                <div class="layui-form-item">
+                 <div class="layui-inline">
+                     <label class="layui-form-label">站点图片</label>
+                        <input type="hidden" name="photo" id="hshowImage">
+                        <div class="layui-input-inline" >
+                            <input type="file"  name="upfile" id="showImage" class="layui-upload-file">
+                        </div>
+                 </div>
+                </div>
+            </div>
+        </div>
+
+    </fieldset>
+    <fieldset class="layui-elem-field">
+        <legend>位置信息</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label required">站点区域编码</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="regionCode" id="regionCode" lay-verify="required" autocomplete="off" class="layui-input layui-disabled" disabled>
+                    </div>
+                </div>
+                <div></div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">站点详细地址</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="address" id="address" lay-verify="required" autocomplete="off" style="width: 600px;" class="layui-input layui-disabled" disabled>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <div class="layui-input-inline">
+                        <input type="hidden" name="longItude" id="longItude" lay-verify="required" autocomplete="off" class="layui-input layui-disabled">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <div class="layui-input-inline">
+                        <input type="hidden" name="latItude" id="latItude" lay-verify="required" autocomplete="off" class="layui-input layui-disabled">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+        <div class="layui-inline">
+            <button type="button" class="layui-btn layui-btn-small" lay-submit="" lay-filter="station_add">提交</button>
+        </div>
+        <div class="layui-inline">
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-small" >重置</button>
+        </div>
+    </div>
+
+</form>
+
+</form >
+<div class = "map-wrap" id="J_map_wrap">
+    <form class="layui-form" id="position_select">
+        <div class="tool-box">
+            <div class="layui-inline">
+                <select id ="J_city_select" lay-filter="city_filter">
+                    <option value="000">城市获取中</option>
+                </select>
+            </div>
+            <div class="layui-inline">
+                <select id ="J_area_select" lay-filter="area_filter">
+                    <option value="000">区域获取中</option>
+                </select>
+            </div>
+            <div class="layui-input-inline" >
+                <input type="text"  placeholder="关键字搜索" id="tipinput" autocomplete="off" class="layui-input"  style="width:74%;display: inline-block">
+                <button type="button" class="layui-btn layui-btn-mini" id="place_search" style="width: 33px;height: 33px;">
+                    <i class="layui-icon">&#xe615;</i>
+                </button>
+            </div>
+            <div class="layui-input-inline" >
+                <button type="button" id="station_clear" class="layui-btn layui-btn-small" >清除选点</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<script type="text/javascript" src="js/laydate.js"></script>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.3&key=1a5cdec55ebac9dbd85652429f54d4d1&plugin=AMap.Autocomplete,AMap.PlaceSearch"></script>
+<script src="http://webapi.amap.com/ui/1.0/main.js?v=1.0.11"></script>
+<script type="text/javascript" src="http://cache.amap.com/lbs/static/addToolbar.js"></script>
+<script>
+    var global = window.parent.global;
+    //时间选择器
+    laydate.render({
+        elem: '#serviceStart'
+        ,type: 'time'
+    });
+    //时间选择器
+    laydate.render({
+        elem: '#serviceEnd'
+        ,type: 'time'
+    });
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','ajax','upload','layer','laytpl'], function (){
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+        var laytpl = layui.laytpl;
+        var layer=layui.layer;
+        //文件上传插件初始化
+        layui.upload({
+            elem:"#showImage"
+            ,url: global.host+"api/util/uploadByStream"
+            ,success: function(res){
+                $("#hshowImage").val(res.data);
+                $("#showContiner").html('<img src="'+res.data+'" width="110px" height="60px" alt="车辆外观" >');            }
+        });
+
+        $('button[type="reset"]').on('click',function(){
+            $('#station_clear').click();
+        });
+
+        form.on('submit(station_add)',function(data){
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            ajax.post(
+                global.host+"api/trade/doAddRcStation.htm",data.field,function(result){
+                    if(eval(result)==true){
+                        window.location.reload();
+                        window.parent.layer.msg("站点添加成功");
+                    }else{
+                        window.parent.layer.msg("站点添加失败");
+                    }
+                });
+            return false;
+        });
+
+
+
+        //初始化地图对象，加载地图
+        var map;
+        AMapUI.loadUI(['misc/PositionPicker','geo/DistrictExplorer'], function(PositionPicker,DistrictExplorer) {
+            map = new AMap.Map("J_map_wrap", {
+                resizeEnable: true
+            });
+            //输入提示
+            var autoOptions = {
+                input: "tipinput"
+            };
+            var auto = new AMap.Autocomplete(autoOptions);
+            map.plugin(["AMap.ToolBar","AMap.PolyEditor"],function(){   //在地图中添加ToolBar插件
+                toolBar = new AMap.ToolBar({
+                    position:'RT'
+                });
+                map.addControl(toolBar);
+
+            });
+            var placeSearch = new AMap.PlaceSearch({
+                map: map
+            });  //构造地点查询类
+
+            //创建一个区域定位实例
+            var districtExplorer = new DistrictExplorer({
+                map: map
+            });
+            //可拖拽点标记
+            var positionPicker = new PositionPicker({
+                mode: 'dragMarker',
+                map: map,
+                iconStyle: { //自定义外观
+                    url: 'images/marker-rentcar.png',
+                    ancher: [24, 40],
+                    size: [36, 67]
+                }
+            });
+
+
+            AMap.event.addListener(auto, "select", select);//注册监听，当选中某条记录时会触发
+            function select(e) {
+                placeSearch.setCity(e.poi.adcode);
+                placeSearch.search(e.poi.name);  //关键字查询查询
+            }
+            $('#place_search').on('click',function(){
+                var city=JSON.parse($('#J_city_select').val().replace(/'/g, '"')).districtName+JSON.parse($('#J_area_select').val().replace(/'/g, '"')).districtName;
+                placeSearch.setCity(city);
+                placeSearch.search($('#tipinput').val());  //关键字查询查询
+            })
+            $('#station_clear').click(function(){
+                clearPosition();
+            })
+            var contextMenu = new AMap.ContextMenu();
+            var contextMenuPositon;
+            var cityList=[];
+
+            //初始化地图定位点
+            init();
+
+            /**
+             * page initialize function
+             * initialize city selector
+             * initialize event handler
+             * render map first
+             */
+            function init(){
+
+                //get city data and render city select
+                $.get(global.host+"api/trade/getDistrictList.htm",{},function(res){
+                    cityList=res.data;
+                    var cityHtml='';
+                    var selectIndex=0;
+                    for(var i=0;i<cityList.length;i++){
+                        if(cityList[i].parentDistrict.weight==99999){
+                            selectIndex=i;
+                        }
+                        cityHtml+='<option  value="'+JSON.stringify(cityList[i].parentDistrict).replace(/\"/g,"'")+'">'+cityList[i].parentDistrict.districtName+'</option>';
+                    }
+                    $('#J_city_select').html(cityHtml);
+                    //alert(JSON.stringify(cityList[selectIndex].parentDistrict));
+                    $('#J_city_select').val(JSON.stringify(cityList[selectIndex].parentDistrict).replace(/\"/g,"'"));
+                    form.render();
+                    cityChanged(cityList[selectIndex].parentDistrict);
+                    //listen select change event
+                    form.on('select(city_filter)', function(e){
+                        var parentDistrict=JSON.parse(e.value.replace(/'/g, '"'));
+                        cityChanged(parentDistrict);
+                    })
+                    form.on('select(area_filter)', function(e){
+                        var childDistrict=JSON.parse(e.value.replace(/'/g, '"'));
+                        areaChanged(childDistrict);
+                    })
+                    contextMenu.addItem("添加站点",function(e){
+                        var lng = contextMenuPositon.getLng();
+                        var lat = contextMenuPositon.getLat();
+                        addButtonClickHandler(lng,lat);
+                    });
+                    AMap.event.addListener(map,'rightclick',function(e){
+                        contextMenu.open(map,e.lnglat);
+                        contextMenuPositon = e.lnglat;
+                    });
+                });
+
+
+            }
+
+            function addButtonClickHandler(lng,lat){
+                positionPicker.start([lng,lat]);
+                positionPicker.on('success', function(positionResult) {
+                    var position = positionResult.position.toString();
+                    $('#longItude').val(position.split(",")[0]);
+                    $('#latItude').val(position.split(",")[1]);
+                    $('#address').val(positionResult.address);
+                    districtExplorer.locatePosition(positionResult.position, function (err,features) {
+                        if (err) {
+                            console.error(err);
+                            return;
+                        }
+                        var isCityOpen=false;
+                        var isAreaOpen=false;
+                        var areaSelectIndex=0;
+                        for(var i=0;i<cityList.length;i++){
+                            if(cityList[i].parentDistrict.districtName==features[2].properties.name){
+                                $('#J_city_select').val(JSON.stringify(cityList[i].parentDistrict).replace(/\"/g,"'"));
+                                $('#regionCode').val(cityList[i].parentDistrict.districtId);
+                                var areaHtml='<option value="-1">暂无区域信息</option>';
+                                if(cityList[i].parentDistrict.childDistrictList.length>0){
+                                    areaHtml='';
+                                }
+                                for(var j=0;j<cityList[i].parentDistrict.childDistrictList.length;j++){
+                                    areaHtml+='<option value="'+JSON.stringify(cityList[i].parentDistrict.childDistrictList[j]).replace(/\"/g,"'")+'" >'+cityList[i].parentDistrict.childDistrictList[j].districtName+'</option>';
+                                    if(cityList[i].parentDistrict.childDistrictList[j].districtName==features[3].properties.name){
+                                        areaSelectIndex=j;
+                                        $('#regionCode').val(cityList[i].parentDistrict.childDistrictList[j].districtId);
+                                        isAreaOpen=true;
+                                    }
+                                }
+                                $('#J_area_select').html(areaHtml);
+                                if(!isAreaOpen){
+                                    layer.msg('该区域暂未开放!')
+                                    clearPosition();
+                                    $('#J_area_select').val(JSON.stringify(cityList[i].parentDistrict.childDistrictList[0]).replace(/\"/g,"'"));
+                                }else{
+                                    $('#J_area_select').val(JSON.stringify(cityList[i].parentDistrict.childDistrictList[areaSelectIndex]).replace(/\"/g,"'"));
+                                }
+                                    isCityOpen=true;
+                            }
+                        }
+                        if(!isCityOpen){
+                           layer.msg('该城市暂未开放!')
+                           clearPosition();
+                        }
+                            form.render();
+                    });
+
+                });
+                positionPicker.on('fail', function(positionResult) {
+                    $('#longItude').val('');
+                    $('#latItude').val('');
+                    $('#address').val('');
+                });
+
+            }
+
+            function areaChanged(childDistrict){
+                if(childDistrict.lng==0||childDistrict.lat==0){
+                    map.setCity(childDistrict.districtName);
+                }else{
+                    map.panTo(new AMap.LngLat(childDistrict.lng,childDistrict.lat));
+                }
+                $('#regionCode').val(childDistrict.districtId);
+                map.setZoom(11);
+            }
+            /**
+             * done when city select change event is triggered
+             * @districtId citycode or districtId of city. for example, WuHan is 4201.
+             * @lng  center point of city
+             * @lat  center point of city
+             */
+            function cityChanged(parentDistrict){
+                if(parentDistrict.childDistrictList==''){
+                    $('#regionCode').val(parentDistrict.districtId);
+                    //change the map  center point
+                    if(parentDistrict.lng==0||parentDistrict.lat==0){
+                        map.setCity(parentDistrict.districtName);
+                        $('#J_area_select').html('<option value="-1">暂无区域信息</option>');
+                        form.render();
+                    }else{
+                        map.panTo(new AMap.LngLat(parentDistrict.lng,parentDistrict.lat));
+                    }
+                }else{
+                    $('#regionCode').val(parentDistrict.childDistrictList[0].districtId);
+                    var areaHtml='';
+                    for(var i=0;i<parentDistrict.childDistrictList.length;i++){
+                        areaHtml+='<option value="'+JSON.stringify(parentDistrict.childDistrictList[i]).replace(/\"/g,"'")+'" >'+parentDistrict.childDistrictList[i].districtName+'</option>';
+                    }
+                    $('#J_area_select').html(areaHtml);
+                    $('#J_area_select').val(JSON.stringify(parentDistrict.childDistrictList[0]).replace(/\"/g,"'"));
+                    if(parentDistrict.childDistrictList[0].lng==0||parentDistrict.childDistrictList[0].lat==0){
+                        map.setCity(parentDistrict.childDistrictList[0].districtName);
+                    }else{
+                        map.panTo(new AMap.LngLat(parentDistrict.childDistrictList[0].lng,parentDistrict.childDistrictList[0].lat));
+                    }
+                    form.render();
+                }
+
+
+            }
+            //清除位置信息
+            function clearPosition() {
+                positionPicker.stop();
+                //可拖拽点标记
+                positionPicker = new PositionPicker({
+                    mode: 'dragMarker',
+                    map: map,
+                    iconStyle: { //自定义外观
+                        url: 'images/marker-rentcar.png',
+                        ancher: [24, 40],
+                        size: [36, 67]
+                    }
+                });
+                $('#longItude').val('');
+                $('#latItude').val('');
+                $('#address').val('');
+            }
+        });
+
+    });
+    
+</script>
+</body>
+
+</html>

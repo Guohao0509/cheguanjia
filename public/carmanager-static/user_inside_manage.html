@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>内部用户</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+    <style type="text/css">
+      .layui-upload-button{
+        display:none;
+      }
+    </style>
+</head>
+<body>
+<div class="admin-main">
+    <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">用户姓名</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="realName"   placeholder="请输入用户姓名" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">手机号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="mobile"   placeholder="请输入手机号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+            </div>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search" id="J_search_button">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small layui-btn-primary" onclick="window.location.href='http://192.168.5.4:8001/cheguanjia/api/util/export_to_xls?title=姓名,手机号,昵称'">下载模板</button>
+                </div>
+                <div class="layui-inline">
+                    <input type="file"  name="file" id="user_import" class="layui-upload-file">
+                    <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="import_btn">用户导入</button>
+                </div>
+                <div class="layui-inline" id="export_select">
+                     
+                </div>
+                 <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="export_info">导出信息</button>
+                </div>
+            </div>
+        </form>
+    </fieldset>
+    <div id="content" style="width: 100%;height: 533px;"></div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable', 'form','laydate','upload','dictionary'], function () {
+        var btable = layui.btable();
+        var $ = layui.jquery;
+        var layerTips = parent.layer === undefined ? layui.layer : parent.layer; //获取父窗口的layer对象
+        var form = layui.form();
+        var dictionary = layui.dictionary();
+        var parmas = {
+            t: new Date().getTime(),
+            operatorId:global.userInfo.operatorId
+        };
+        //文件上传插件初始化
+        layui.upload({
+        	elem:"#user_import"
+        	,type:"file"
+            ,ext:"xls"
+            ,url: global.host+"api/util/uploadCDUser?operatorId="+global.userInfo.operatorId
+            ,success: function(res){
+            	   var note="";
+            	   if(res.data.register>0){
+            		   note+="已注册用户导入成功数:"+res.data.register+"<br>";
+            	   }if(res.data.noRegister>0){
+            		   note+="未注册用户导入失败数:"+res.data.noRegister+"<br>";
+            	   }if(res.data.relevance>0){
+            		   note+="已关联用户导入失败数:"+res.data.relevance+"<br>";
+            	   }if(res.data.formatError>0){
+            		   note+="手机号格式错误用户导入失败数:"+res.data.formatError+"<br>";
+            	   } if(note==""){
+            		   note="导入失败，请检查excel！"; 
+            	   }   
+            	   window.parent.layer.alert(note);
+            	   $("#J_search_button").click();    
+            }
+        }); 
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/user/getInsideUserList',
+            pageSize: 10,
+            params: parmas,
+            columns: [ 
+            {
+                fieldName: '姓名',
+                field: 'realName'
+            },{
+                fieldName: '手机号',
+                field: 'mobile'
+            },{
+                fieldName: '昵称',
+                field: 'nickName'
+            }, {
+                fieldName: '注册时间',
+                field: 'regDate'
+            },
+            {
+                fieldName: '操作',
+                field: 'userId',
+                format: function (val,obj) {
+                    var html =
+                            '<input type="button" value="编辑" data-action="edit" data-id="' + val + '"data-obj=\''+JSON.stringify(obj)+'\' class="layui-btn layui-btn-mini" /> '+
+                            '<input type="button" value="删除" data-action="del" data-id="' + val + '" class="layui-btn layui-btn-mini layui-btn-danger" />'
+                    return html;
+                }
+            }],
+            even: true,
+            //skin: 'row',
+            checkbox: false,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td:last-child').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        var id = $that.data('id');
+                        
+                        $that.on('click', function () {
+                        	var jsonStr = encodeURI($that.attr("data-obj"));
+                            switch (action) {   
+                                case 'edit':
+                                    parent.tab.tabAdd({
+                                        href: "user_inside_edit.html?userInfo="+jsonStr, //地址
+                                        icon:"fa fa-pencil-square-o",
+                                        title:"用户编辑"
+                                    });
+                                    ;
+                                    break;
+                                case 'del': //删除
+                                	layer.confirm("确认删除？", {icon: 1, title:'提示'},function(index){
+                                    	$.get(global.host+'api/user/deleteInsideUser.htm',{'userId':id},function(result){
+                                    	    layer.close(index);
+                                    		if(result['data']){
+                                			     $that.parent().parent().remove();
+                                    			 window.parent.layer.msg("用户删除成功"); 
+                                    		 }else{
+                                    			 window.parent.layer.msg("用户删除失败"); 
+                                    		 }                   
+                                    	});
+                                    });
+                                    break;
+                            }
+                        });
+                    });
+                });
+            }
+        });
+        btable.render();
+        //监听搜索表单的提交事件
+     
+        
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            btable.get(data.field);
+            return false;
+        });
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+        $(window).on('resize', function (e) {
+            var $that = $(this);
+            $('#content').height($that.height() - 92);
+        }).resize();
+        $("#import_btn").on("click",function(){
+        	$("#user_import").click();
+        })
+        //导出信息
+        $("#export_info").on("click",function(){
+        	var title="&&title=";//标题
+        	var titles=$(".layui-table").find("th");
+        	var limit_select=$('select[name="limit_select"]').val().split(",");
+        	var start="&&start="+limit_select[0];//开始条数
+        	var limit="&&limit="+limit_select[1];//
+        	for(var i=1;i<titles.length-1;i++){
+        		if(titles[i].innerHTML.indexOf("<")!=-1){
+        			title+=titles[i].innerHTML.substr(0,titles[i].innerHTML.indexOf("<"))+",";
+        		}else{
+        			title+=titles[i].innerHTML+",";
+        		}        		    
+        	}
+        	title=title.substr(0,title.length-1); 
+        	var param="";//导出条件
+        	$("#J_search_form").find("input[name],select[name]").each(function(){
+        		param+="&&"+$(this).attr("name")+"="+$(this).val();
+        	});
+        	var url=global.host+"api/util/export_to_xls?operatorId="+global.userInfo.operatorId+"&&sql=InsideUser"+title+start+param+limit;
+        	window.location.href=url;        	
+        });
+    });
+</script>
+</body>
+
+</html>

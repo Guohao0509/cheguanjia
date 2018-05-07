@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>报警管理</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">车牌号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="plateNum"   placeholder="请输入车牌号不要有空格" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">报警状态</label>
+                    <div class="layui-input-inline">
+                        <select name="alarmStatus">
+                            <option value="999">全部状态</option>
+                            <option value="0">待激活</option>
+                            <option value="1">待处理</option>
+                            <option value="2">处理中</option>
+                            <option value="3">已完成</option>
+                            <option value="4">已关闭</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">报警类型</label>
+                    <div class="layui-input-inline">
+                        <select name="alarmType">
+                            <option value="999">全部类型</option>
+                            <option value="0">续航报警</option>
+                            <option value="1">越界报警</option>
+                            <option value="2">超速报警</option>
+                            <option value="3">电子围栏报警</option>
+                            <option value="4">高温报警</option>
+                            <option value="5">车机离线报警</option>
+                            <option value="6">蓄电池低电量报警</option>
+                        </select>
+                    </div>
+                </div>
+                 <div class="layui-inline">
+                    <label class="layui-form-label">车辆组</label>
+                    <div class="layui-input-inline">
+                        <select name="carGroupId" id="J_carGroupId">
+                           <option value="">全部分组</option>                        
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">激活时间段</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="activeStartTime" id="activeStartTime" placeholder="" autocomplete="off" class="layui-input">
+                    </div>
+                    <div class="layui-form-mid">-</div>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="activeEndTime" id="activeEndTime" placeholder="" autocomplete="off" class="layui-input" >
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">完成时间段</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="finishStartTime" id="finishStartTime" placeholder="" autocomplete="off" class="layui-input">
+                    </div>
+                    <div class="layui-form-mid">-</div>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="finishEndTime"  id="finishEndTime" placeholder="" autocomplete="off" class="layui-input" >
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                <div class="layui-inline" id="export_select">
+                     
+                </div>
+                 <div class="layui-inline">
+                    <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="export_info">导出信息</button>
+                </div>
+            </div>
+        </form>
+    </fieldset>
+    <div id="content" style="width: 100%;height: 533px;"></div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable', 'form','laydate','dictionary','ajax'], function () {
+        var btable = layui.btable(),
+                $ = layui.jquery,
+                layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+                form = layui.form(),
+                dictionary = layui.dictionary();
+        var parmas = {
+            t: new Date().getTime(),
+            operatorId:global.userInfo.operatorId
+        };
+        var ajax = layui.ajax();
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        console.log(parmas)
+        
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/operation/getCarAlarmList',
+            pageSize: 10,
+            params: parmas,
+            columns: [{
+                fieldName: '车牌号',
+                field: 'plateNum'
+            }, {
+                fieldName: '报警时间',
+                field: 'activationTime',
+                sortable: true
+            },{
+                fieldName: '类型',
+                field: 'alarmType',
+                format:function(val){
+                    return dictionary.ALARM_TYPE(val);
+                }
+            }, {
+                fieldName: '处理人',
+                field: 'acceptUserId'
+            }, {
+                fieldName: '完成时间',
+                field: 'finishedTime'
+            }, {
+                fieldName: '状态',
+                field: 'alarmStatus',
+                format:function(val){
+                    return dictionary.ALARM_STATUS(val);
+                }
+            }, {
+                fieldName: '操作',
+                field: 'carAlarmId',
+                format: function (val,obj) {
+                    var html = "";
+                    if(obj.alarmStatus==3||obj.alarmStatus==4){
+                        html = '<input type="button" value="关闭" disabled data-action="edit" data-id="' + val + '" data-id="'+val+'" class="layui-btn layui-btn-mini layui-btn-disabled" /> ';
+                    }else{
+                        html = '<input type="button" value="关闭" data-action="edit" data-id="' + val + '" data-id="'+val+'" class="layui-btn layui-btn-mini" /> ';
+                    }
+
+                    return html;
+                }
+            }],
+            even: true,
+            //skin: 'row',
+            checkbox: false,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td:last-child').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        var id = $that.data('id');
+                        $that.on('click', function () {
+                            switch (action) {
+                                case 'edit':
+                                    layer.confirm('确定要关闭车辆报警吗？', {
+                                        btn: ['确定','取消'] //按钮
+                                    }, function(){
+                                        ajax.post(
+                                                global.host+"api/operation/doUpdateCarAlarmClose.htm",{carAlarmId:id},function(data){
+                                                    layer.msg("报警关闭成功");
+                                                    $.extend(true,parmas,$("#J_search_form").serializeObject());
+                                                    btable.get(parmas);
+                                                });
+                                    }, function(){
+                                    })
+                                    break;
+                                case 'del': //删除
+                                    layerTips.msg(action + ":" + id);
+                                    break;
+                            }
+                        });
+                    });
+                });
+            }
+        });
+        btable.render();
+        //监听搜索表单的提交事件
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            btable.get(data.field);
+            return false;
+        });
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+        $(window).on('resize', function (e) {
+            var $that = $(this);
+            $('#content').height($that.height() - 92);
+        }).resize();
+        $('#activeStartTime').on('click',function(){
+        	if($('#activeEndTime').val().trim()!=''){
+        		layui.laydate({
+             		 elem:this
+             		 ,min: ''
+             		 ,max: $('#activeEndTime').val()
+             	 });
+        	}else{
+          	 layui.laydate({
+          		 elem:this
+          		 ,min: ''
+          		 ,max: dataToString()
+          	 });
+        	}
+       });
+        $("#J_carGroupId").empty();
+        $("#J_carGroupId").append("<option value=\" \">全部分组</option>");
+        $.post(
+                global.host+"api/operator/getCarGroupList.htm",{
+                    operatorId: global.userInfo.operatorId,
+                    carGroupName:''
+                },function(result){                  	
+                    for (var i = 0; i < result.data.rows.length; i++) {
+                        $("#J_carGroupId").append("<option value=" + result.data.rows[i].carGroupId + ">" +result.data.rows[i].carGroupName + "</option>");
+                    }           
+                    form.render();                  
+                });
+       $('#activeEndTime').on('click',function(){
+       	layui.laydate({ 
+       		 elem:this
+       	    ,min:$('#activeStartTime').val()
+       	    ,max:dataToString() 
+       	 });
+       });
+     $('#finishStartTime').on('click',function(){
+    	   if($('#finishEndTime').val().trim()!=''){
+       		layui.laydate({
+            		 elem:this
+            		 ,min: ''
+            		 ,max: $('#finishEndTime').val()
+            	 });
+       	}else{
+         	 layui.laydate({
+         		 elem:this
+         		 ,min: ''
+         		 ,max: dataToString()
+         	 });
+       	}
+      });
+     //导出信息
+     $("#export_info").on("click",function(){
+     	var title="&&title=";//标题
+     	var titles=$(".layui-table").find("th");
+     	var limit_select=$('select[name="limit_select"]').val().split(",");
+    	var start="&&start="+limit_select[0];//开始条数
+    	var limit="&&limit="+limit_select[1];//
+     	for(var i=1;i<titles.length-1;i++){
+     		if(titles[i].innerHTML.indexOf("<")!=-1){
+     			title+=titles[i].innerHTML.substr(0,titles[i].innerHTML.indexOf("<"))+",";
+     		}else{
+     			title+=titles[i].innerHTML+",";
+     		}        		    
+     	}
+     	title=title.substr(0,title.length-1); 
+     	var param="";//导出条件
+     	$("#J_search_form").find("input[name],select[name]").each(function(){
+     		param+="&&"+$(this).attr("name")+"="+$(this).val();
+     	});
+     	var url=global.host+"api/util/export_to_xls?operatorId="+global.userInfo.operatorId+"&&sql=CarAlarm"+title+start+param+limit;
+     	window.location.href=url;        	
+     });
+     
+      $('#finishEndTime').on('click',function(){
+      	layui.laydate({ 
+      		 elem:this
+      	    ,min:$('#finishStartTime').val()
+      	    ,max:dataToString() 
+      	 });
+      });
+    });
+    function dataToString(){
+  	   var date = new Date(); 
+  	   var mon = date.getMonth() + 1;
+  	   var day = date.getDate();
+  	   return date.getFullYear() + "-" +mon+ "-" +day;
+      }
+</script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>coupon</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <fieldset class="layui-elem-field">
+        <legend>查询条件</legend>
+        <form class="layui-field-box layui-form" id="J_search_form">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">优惠卷ID</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="crId"   placeholder="请输入优惠卷ID" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">兑换码</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="exchangeCode"   placeholder="请输入兑换码" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">过期状态</label>
+                    <div class="layui-input-inline">
+                        <select name="isInExpiryDate">
+                            <option value="0">使用中</option>
+                            <option value="1">已过期</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+                <div class="layui-inline">
+                    <button type="submit" class="layui-btn layui-btn-small" lay-submit="" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-inline">
+                    <button type="reset" class="layui-btn layui-btn-small layui-btn-primary"  lay-submit="" lay-filter="reset" id="J_reset_button">重置</button>
+                </div>
+                <div class="layui-inline" id="export_select">
+                     
+                </div>
+                 <div class="layui-inline">
+                    <!-- <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="export_info">导出信息</button> -->
+                    <button type="button" class="layui-btn layui-btn-small layui-btn-primary" id="codeAdd">添加兑换码</button>
+                </div>
+            </div>
+        </form>
+    </fieldset>
+    <div id="content" style="width: 100%;height: 533px;"></div>
+</div>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use(['btable', 'form','laydate','dictionary','ajax'], function () {
+        var btable = layui.btable(),
+                $ = layui.jquery,
+                layerTips = parent.layer === undefined ? layui.layer : parent.layer, //获取父窗口的layer对象
+                form = layui.form(),
+                dictionary = layui.dictionary();
+        var parmas = {
+            t: new Date().getTime(),
+            operatorId:global.userInfo.operatorId
+        };
+        var ajax = layui.ajax();
+        $.fn.serializeObject = function(){
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+        $.extend(true,parmas,$("#J_search_form").serializeObject());
+        
+        btable.set({
+            openWait: true,
+            elem: '#content',
+            url: global.host+'api/trade/getBaseExchangeCodeList',
+            pageSize: 10,
+            params: parmas,
+            columns: [{
+                fieldName: '兑换码名称',
+                field: 'name'
+            }, {
+                fieldName: '兑换码',
+                field: 'exchangeCode',
+                // sortable: true
+            },{
+                fieldName: '优惠卷概要',
+                field: 'description',
+            }, {
+                fieldName: '开始时间',
+                field: 'startTime'
+            }, {
+                fieldName: '结束时间',
+                field: 'endTime'
+            }, {
+                fieldName: '已兑换/总人数',
+                field: 'receiveNum + "/" +item.maxNum', // 这里拼接了一个模板
+            },
+            {
+                fieldName: '状态',
+                field: 'status',
+            }, {
+                fieldName: '操作',
+                field: 'cecId',
+                format: function (val,obj) {
+                    var html = "";
+                    html += '<input type="button" value="修改" data-action="edit" data-name="'+ obj.name +'" data-id="' + val + '" class="layui-btn layui-btn-mini" /> ';
+                    html += '<input type="button" value="删除" data-action="delete" data-id="' + val + '" class="layui-btn layui-btn-mini layui-btn-danger" /> ';
+                    return html;
+                }
+            }],
+            even: true,
+            //skin: 'row',
+            checkbox: false,
+            paged: true,
+            singleSelect: false,
+            onSuccess: function ($elem) {
+                $elem.children('tr').each(function () {
+                    $(this).children('td:last-child').children('input').each(function () {
+                        var $that = $(this);
+                        var action = $that.data('action');
+                        var cecId = $that.data('id');
+                        $that.on('click', function () {
+                            switch (action) {
+                                case 'delete':
+                                    layer.confirm('确定要删除吗？', {
+                                        btn: ['确定','取消'] //按钮
+                                    }, function(){
+                                        // 删除
+                                        ajax.post(
+                                            global.host+"api/trade/deleteExchangeCode",{cecId: cecId},function(data){
+                                                layer.msg("删除成功");
+                                                $.extend(true,parmas,$("#J_search_form").serializeObject());
+                                                btable.get(parmas);
+                                            });
+                                    }, function(){
+                                    })
+                                    break;
+                                case 'edit': //编辑
+                                    parent.parent.tab.tabAdd({
+                                        href: 'code_coupon_edit.html?cecId=' + cecId, //地址
+                                        icon:"fa fa-pencil-square-o",
+                                        title: $that.data('name')
+                                    });
+                                    break;
+                            }
+                        });
+                    });
+                });
+            }
+        });
+        btable.render();
+        //监听搜索表单的提交事件
+        form.on('submit(search)', function (data) {
+            $.extend(true, data.field,{operatorId:global.userInfo.operatorId});
+            btable.get(data.field);
+            return false;
+        });
+        form.on('submit(reset)', function (data) {
+            window.setTimeout(function(){
+                $('form.layui-form').find('button[lay-filter=search]').click();
+            },0);
+            return true;
+        });
+        $(window).on('resize', function (e) {
+            var $that = $(this);
+            $('#content').height($that.height() - 92);
+        }).resize();
+    
+        $('#codeAdd').on('click', function (e) {
+            parent.parent.tab.tabAdd({
+                href: 'code_coupon_add.html', //地址
+                icon:"fa fa-pencil-square-o",
+                title: '发放兑换码'
+            });
+        });
+    });
+    function dataToString(){
+  	   var date = new Date(); 
+  	   var mon = date.getMonth() + 1;
+  	   var day = date.getDate();
+  	   return date.getFullYear() + "-" +mon+ "-" +day;
+      }
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>用户编辑</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+</head>
+<body>
+<div class="admin-main">
+    <form class="layui-form" id="J_edit_form">
+
+    </form>
+</div>
+<script type="text/html" id="J_edit_form_tpl">
+    <fieldset class="layui-elem-field">
+        <legend>用户编辑</legend>
+        <div class="layui-field-box">
+            <div class="layui-form-item">
+                 <div class="layui-inline">
+                    <label class="layui-form-label">用户姓名</label>
+                    <div class="layui-input-inline">
+                        <input type="type" name="realName" value="{{d.realName}}" autocomplete="off" class="layui-input layui-disabled" disabled>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">手机号</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="mobile" value="{{d.mobile}}"   placeholder="请输入手机号" lay-verify="required|phone" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">驾驶证审核状态</label>
+                    <div class="layui-input-inline">
+                         <select name="licenseStatus" lay-verify="required">
+                            <option {{# if(d.licenseStatus==0){ }}selected="selected"{{#} }} value="0">未提交资料</option>
+                            <option {{# if(d.licenseStatus==1){ }}selected="selected"{{#} }} value="1">审核中</option>
+                            <option {{# if(d.licenseStatus==2){ }}selected="selected"{{#} }} value="2">审核未通过</option>
+                            <option {{# if(d.licenseStatus==3){ }}selected="selected"{{#} }} value="3">审核通过</option>
+                          </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">身份证审核状态</label>
+                    <div class="layui-input-inline">
+                         <select name="identityStatus" lay-verify="required">
+                             <option {{# if(d.identityStatus==0){ }}selected="selected"{{#} }} value="0">未提交资料</option>
+                            <option {{# if(d.identityStatus==1){ }}selected="selected"{{#} }} value="1">审核中</option>
+                            <option {{# if(d.identityStatus==2){ }}selected="selected"{{#} }} value="2">审核未通过</option>
+                            <option {{# if(d.identityStatus==3){ }}selected="selected"{{#} }} value="3">审核通过</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label required">审核状态</label>
+                    <div class="layui-input-inline" id="verify_status">
+                        <select name="verifyStatus" lay-verify="required">
+                            <option {{# if(d.verifyStatus==0){ }}selected="selected"{{#} }} value="0">未提交资料</option>
+                            <option {{# if(d.verifyStatus==1){ }}selected="selected"{{#} }} value="1">审核中</option>
+                            <option {{# if(d.verifyStatus==2){ }}selected="selected"{{#} }} value="2">审核未通过</option>
+                            <option {{# if(d.verifyStatus==3){ }}selected="selected"{{#} }} value="3">审核通过</option>
+                        </select>
+                    </div>
+                </div>
+              <div class="layui-inline" id="verify_info">
+                    <label class="layui-form-label">审核不通过原因</label>
+                    <div class="layui-input-inline">
+                        <select  lay-verify="required">
+                            <option  {{# if(d.verifyInfo==1){ }}selected="selected"{{#} }} value="1">驾驶经验未满1年</option>
+                            <option  {{# if(d.verifyInfo==2){ }}selected="selected"{{#} }} value="2">上传认证照片不正确</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+        <div class="layui-inline">
+            <button type="button" class="layui-btn layui-btn-small" lay-submit="" lay-filter="user_edit">提交</button>
+        </div>
+        <div class="layui-inline">
+            <button type="reset" class="layui-btn layui-btn-primary layui-btn-small" >重置</button>
+        </div>
+    </div>
+</script>
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script>
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','laydate','upload','ajax','laytpl'], function (){
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+        var laytpl = layui.laytpl;
+        //编辑模版
+        var editFormTpl = document.getElementById("J_edit_form_tpl").innerHTML;
+        //车辆信息
+        var userInfo = JSON.parse(decodeURI(getSearchString("userInfo")));
+        //同步渲染 编辑表单
+        document.getElementById("J_edit_form").innerHTML = laytpl(editFormTpl).render(userInfo);
+        if(userInfo["verifyStatus"]=="2"){
+        	$("#verify_info").css("display","inline-block");
+  		    $("#verify_info").show();
+        }
+        form.render();
+        form.on('submit(user_edit)',function(data){
+            $.extend(true, data.field,{userId:userInfo.userId,operatorId:global.userInfo.operatorId});
+            ajax.post(
+                    global.host+"api/user/doUpdateInsideUser.htm",data.field,function(result){
+                        if(eval(result)==true){
+                        	window.parent.layer.msg("用户更新成功");
+                        }else{
+                        	window.parent.layer.msg("用户更新失败");
+                        }    	
+                    });
+            return false;
+        });
+     $("#verify_status input").on("blur",function(){
+    	  if($("#verify_status select").val()=="2"){
+    		  $("#verify_info").css("display","inline-block");
+              $("#verify_info select").attr('name','verifyInfo');
+    		  $("#verify_info").show();
+    	  }else{
+              $("#verify_info select").removeAttr('name');
+    		  $("#verify_info").hide();
+    	  }
+     });
+       
+    });
+  
+</script>
+</body>
+
+</html>

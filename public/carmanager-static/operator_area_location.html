@@ -1,0 +1,299 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>区域位置</title>
+    <link rel="stylesheet" href="plugins/layui/css/layui.css" media="all" />
+    <link rel="stylesheet" href="css/global.css" media="all">
+    <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/btable.css" />
+
+    <style type="text/css">
+        html,body{width:100%;height:100%}
+        .map-wrap{width:100%;height:100%;}
+        .tool-box{
+            position:absolute;left:15px;top:15px;z-index:999;
+        }
+        #J_city_select{border:none;box-shadow:#ccc 3px 3px 7px;border-radius:0;}
+        .polygon-editor-wrap{position:absolute;left:15px;top:70px;z-index:999;height:100%;max-height:80%;overflow:auto;}
+        #J_polygon_editor_ul li{width: 200px;height:180px;background:rgba(235,235,235,.8);}
+
+        #J_polygon_editor_ul .tc{margin-top:15px;}
+        .polygon-editor{padding:15px;width:200px;background:rgba(238,238,238,.8);box-shadow:#ccc 3px 3px 7px;font-size:14px;margin-bottom:10px;}
+        #J_polygon_editor_ul .active{background:rgba(255,255,255,.8)}
+        .polygon-editor h3{line-height: 24px;}
+        .polygon-editor .row{line-height: 26px;}
+        .polygon-editor input[type="text"]{width:129px;}
+        .color-block-wrap .color-block{width:20px;height:20px;display:inline-block;border:1px solid #efefef;margin-right:3px;}
+        .color-block-wrap .color-block.active{border:1px solid #333;}
+        ::-webkit-scrollbar{width:6px;}
+        ::-webkit-scrollbar-track{background-color:#fff;}
+        ::-webkit-scrollbar-thumb{background-color:#e0e0e0;}
+        ::-webkit-scrollbar-thumb:hover {background-color:#9c3}
+        ::-webkit-scrollbar-thumb:active {background-color:#fff}
+
+    </style>
+</head>
+<body>
+<div class = "map-wrap" id="J_map_wrap">
+</div>
+<form class="layui-form" >
+
+<div class="tool-box">
+    <div class="layui-inline">
+    <select id ="J_city_select" lay-filter="city_filter" >
+        <option value="000">城市获取中</option>
+    </select>
+    </div>
+
+</div>
+
+<div class ="polygon-editor-wrap">
+    <ul id="J_polygon_editor_ul">
+
+    </ul>
+</div>
+</form>
+<script type="text/html" id="J_polygon_editor_tpl">
+    <div class="row">
+        <label>区域名称</label>
+        <input type="text" name="areaname" id="J_{{d.uuid}}_areaname_input" value={{d.areaName}}>
+    </div>
+
+</script>
+
+<script type="text/javascript" src="plugins/layui/layui.js"></script>
+<script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.2&key=1a5cdec55ebac9dbd85652429f54d4d1"></script>
+<script type="text/javascript" src="http://cache.amap.com/lbs/static/addToolbar.js"></script>
+<script>
+    function getSearchString(key) {
+        // 获取URL中?之后的字符
+        var str = window.location.search;
+        str = str.substring(1,str.length);
+
+        // 以&分隔字符串，获得类似name=xiaoli这样的元素数组
+        var arr = str.split("&");
+        var obj = new Object();
+        // 将每一个数组元素以=分隔并赋给obj对象
+        for(var i = 0; i < arr.length; i++) {
+            var tmp_arr = arr[i].split("=");
+            obj[decodeURIComponent(tmp_arr[0])] = decodeURIComponent(tmp_arr[1]);
+        }
+        return obj[key];
+    }
+    var global = window.parent.global;
+    layui.config({
+        base: 'js/',
+        v: new Date().getTime()
+    }).use([ 'form','ajax','laytpl'], function (){
+        var form = layui.form();
+        var ajax = layui.ajax();
+        var $ = layui.jquery;
+        var laytpl = layui.laytpl;
+
+        var areaInfo = JSON.parse(decodeURI(getSearchString("areaInfo")));
+        //同步渲染 编辑表单
+        //初始化地图对象，加载地图
+        var map = new AMap.Map("J_map_wrap", {
+            resizeEnable: true
+        });
+        map.plugin(["AMap.ToolBar","AMap.PolyEditor"],function(){   //在地图中添加ToolBar插件
+            toolBar = new AMap.ToolBar({
+                position:'RT'
+            });
+            map.addControl(toolBar);
+
+        });
+
+        var contextMenu = new AMap.ContextMenu();
+        var currentCity  = {};
+        var contextMenuPositon;
+        var polygonArray = {};
+        var polygonEditorArray ={};
+        var polygonDomArray = {};
+        //初始化地图定位点
+        var markers=[];
+        init();
+
+        /**
+         * page initialize function
+         * initialize city selector
+         * initialize event handler
+         * render map first
+         */
+        function init(){
+
+            //get city data and render city select
+            $.get(global.host+"api/operation/getCityList.htm",{},function(res){
+                var cityArray = res.data.cityList;
+                var $J_city_select = $("#J_city_select");
+                var $J_polygon_editor_ul =$("#J_polygon_editor_ul");
+                var select_val;
+                var select_index=-1;
+                $J_city_select.empty();
+                for(var i = 0; i<cityArray.length;i++){
+                    $J_city_select.append('<option value="'+JSON.stringify(cityArray[i]).replace(/\"/g,"'")+'">'+cityArray[i].districtName+'</option>');
+                    if(cityArray[i].districtId==areaInfo[0].cityCode){
+                        select_val=JSON.stringify(cityArray[i]).replace(/\"/g,"'");
+                        select_index=i;
+                    }
+                }
+                $J_city_select.val(select_val);
+                form.render('select');
+                if(cityArray.length>0){
+                    if(select_index!=-1){
+                        cityChanged(cityArray[select_index].districtId,cityArray[select_index].lng,cityArray[select_index].lat);
+                    }else{
+                        cityChanged(cityArray[0].districtId,cityArray[0].lng,cityArray[0].lat);
+                    }
+
+                }
+                //listen select change event
+                form.on('select(city_filter)', function(data){
+                    var obj = JSON.parse(data.value.replace(/'/g, '"'));
+                    cityChanged(obj.districtId,obj.lng,obj.lat);
+                })
+
+
+            });
+        }
+
+        /**
+         * done when city select change event is triggered
+         * @districtId citycode or districtId of city. for example, WuHan is 4201.
+         * @lng  center point of city
+         * @lat  center point of city
+         */
+        function cityChanged(districtId,lng,lat){
+            currentCity = {
+                districtId:districtId
+            }
+            //change the map  center point
+            if(lng==0||lat==0){
+                map.setCity(JSON.parse($('#J_city_select').val().replace(/'/g, '"')).districtName);
+            }else{
+                map.panTo(new AMap.LngLat(lng,lat));
+            }
+            map.setZoom(9);
+
+            //get area shape data of the city
+           ajax.post(global.host+"api/operation/getAreaList.htm",{cityCode:districtId,operatorId:global.userInfo.operatorId},function(data){
+                //initialize polygonArray;
+
+                polygonArray ={};
+                polygonEditorArray = {};
+
+               var areaList=data.rows  //对数据做预处理，格式转换
+               var infoWindow = new AMap.InfoWindow({offset: new AMap.Pixel(0, -30)});
+               for(var j=0;j<areaInfo.length;j++){
+                   var active;
+                   for(var i=0;i<areaList.length;i++){
+                      if(areaList[i].areaId==areaInfo[j].areaId){
+                          active=i;
+                      }
+                   }
+                   if(active!=undefined){
+                       var uuid = generateMixed(16);
+                       areaList[active].uuid = uuid;
+                       polygonArray[uuid] = new AMap.Polygon({
+                           map:map,
+                           path:toArray(areaList[active].borderList),
+                           fillColor:areaList[active].lineColor,
+                           fillOpacity:0.3,
+                           strokeWeight:2,
+                           strokeColor:areaList[active].lineColor,
+                           extData:areaList[active]
+                       });
+                       //构建信息窗体中显示的内容
+                       var info = [];
+                       info.push("<label>名称:<label/><div style=\"padding:0px 0px 0px 4px;display: inline-block; \"><b>"+areaList[active].areaName+"</b>");
+                       infoWindow = new AMap.InfoWindow({
+                           content: info.join("<br/>")  //使用默认信息窗体框样式，显示信息内容
+                       });
+                       infoWindow.open(map,toArray(areaList[active].borderList)[0]);
+                       //if you want to edit a polygon, also need to create a polygonEditor for the polygon at the same time.
+                       //see amap api . http://lbs.amap.com/api/javascript-api/reference/overlay#Polygon
+                       polygonEditorArray[uuid] = new AMap.PolyEditor(map,polygonArray[uuid]);
+                       //bind dblclick event to polygon
+                       //var area = AMap.GeometryUtil.ringArea(areaList[i].borderlist)//求面积
+                       // 设置鼠标划过点标记显示的文字提示
+                       polygonArray[uuid].on("click",polygonDoubleClickHandler);
+                   }
+
+               }
+                //map.setFitView();
+
+                //清空数组
+                for(var i=markers.length-1;i>=0;i--){
+                    markers[i].setMap(null);
+                }
+                markers=[];
+                /**
+                 * 添加站点喵点到地图上
+                 */
+                var stationList = data.stationList;
+                for(var i=0,len=stationList.length;i<len;i++){
+                    var marker = new AMap.Marker({ //添加自定义点标记
+                        map:map,
+                        icon: "images/marker-rentcar.png",
+                        offset: new AMap.Pixel(-17, -61),
+                        position:new AMap.LngLat(stationList[i].longItude,stationList[i].latItude),
+                        content:'<div class="marker-car-icon" title="'+stationList[i].staName+'"><img src="images/marker-rentcar.png" style="top: 0px; left: 0px;"><div class="marker-car-plate"><div class="arrow"></div></div></div>',
+                        extData:stationList[i]
+                    });
+                    markers.push(marker);
+                }
+            });
+
+        }
+        function polygonDoubleClickHandler(e){
+            var extData = this.getExtData();
+            //构建信息窗体中显示的内容
+            var info = [];
+            info.push("<label>名称:<label/><div style=\"padding:0px 0px 0px 4px;display: inline-block;\"><b>"+extData.areaName+"</b>");
+            infoWindow = new AMap.InfoWindow({
+                content: info.join("<br/>")  //使用默认信息窗体框样式，显示信息内容
+            });
+            infoWindow.open(map,toArray(extData.borderList)[0]);
+        }
+        /**
+         * create uuid
+         * @n uuid length
+         */
+        function generateMixed(n) {
+            var chars = ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+            var res = "";
+            for(var i = 0; i < n ; i ++) {
+                var id = Math.ceil(Math.random()*35);
+                res += chars[id];
+            }
+            return res;
+        }
+
+        function copyArray(oldArray){
+            var newArray = [];
+            for(var i=0;i<oldArray.length;i++){
+                newArray.push(oldArray[i]);
+            };
+            return newArray;
+        };
+
+        function toArray(str){
+            var tempArray = str.split(";");
+            var newArray=[];
+            for(var i=0;i<tempArray.length-1;i++){
+                var arr=[];
+                arr.push(parseFloat(tempArray[i].split(",")[0]));
+                arr.push(parseFloat(tempArray[i].split(",")[1]));
+                newArray.push(arr);
+            }
+            return newArray;
+        };
+    });
+    
+</script>
+</body>
+
+</html>
