@@ -7,61 +7,238 @@
     <link rel="stylesheet" href="css/global.css" media="all">
     <link rel="stylesheet" href="plugins/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/btable.css" />
+    <script src="./js/coupon.js"></script> 
+    <style>
+        html {
+          background-color: #fff;
+        }
+        html,body{width:100%;height:100%;}
+        .layui-tab-title {
+          position: fixed;
+          top: 0px;
+          padding-top: 10px;
+          right: 0px;
+          z-index: 100;
+          background-color: #fff;
+        }
+        .main{height:100%;position: relative;}
+        .admin-main {
+          background-color: #fff;
+        }
+        .discount-type-box{width:174px;overflow-y: auto;border-right: 1px solid #dddddd;}
+        .form-box{position: absolute;left:205px;top:40px;right:0;bottom:0;}
+        .type-list {
+          border-top: 1px solid #dddddd;
+          position: absolute;
+          top: 40px;
+          width: 165px;
+          margin: 10px 10px 0 0px;
+        }
+        .type-item{
+          height: 35px;
+          line-height: 35px;
+          text-align: center;
+          background-color: #eeeeee;
+          border-bottom: 1px solid #dddddd;
+          border-right: 1px solid #dddddd;
+          cursor: pointer;
+        }
+        .type-item-active {
+          background-color: #fff !important;
+          border-right: 1px solid #ffffff !important;
+          border-left: 3px solid #5FB878;
+        }
+    </style>
 </head>
 <body>
-  <div class="layui-tab layui-tab-brief">
+  <div class="layui-tab layui-tab-brief" style="height: 100%; position: relative;background-color: #fff;">
     <div class="panel_icon">
 
     </div>
     <ul class="layui-tab-title" id="titleContent">
-      <li class="layui-this" url="bundle_add_base.html">基础分时套餐</li>
-      <li url="bundle_add_discount.html">优惠包套餐</li>
+      <!-- <li class="layui-this" url="bundle_add_base.html">基础分时套餐</li>
+      <li url="bundle_add_discount.html">优惠包套餐</li> -->
     </ul>
-    <div id="bundleAddContent" class="layout-nav-card layui-tab-content" style="padding:0px;">
-      <div class="layui-tab-item layui-show">
-          <iframe src="" frameborder="0" style="width:100%;"></iframe>
+    <div id="bundleAddContent"  class="layout-nav-card layui-tab-content discount-wrapper" style="padding:0px;height: 100%;">
+      <div class="layui-tab-item layui-show" style="height: 100%;">
+        <div class="admin-main"  id="main-content" style="padding-top: 60px;" >
+         
+        </div>
       </div>
     </div>
   </div>
 <script type="text/javascript" src="plugins/layui/layui.js"></script>
 <script type="text/html" id="templateTitle">
   {{#  layui.each(d, function(index, item){ }}
-    <li class="layui-this" data-obj='{{ JSON.stringify(item) }}'>{{ item.pptName }}</li>
+    <li data-index='{{ index }}' data-id="{{ item.pptId }}" data-obj='{{ JSON.stringify(item) }}' >{{ item.pptName }}</li>
   {{#  }); }}
 </script>
+<script type="text/html" id="typeListTemplate">
+  <ul class="type-list">
+    <li class="type-item  type-item-active" data-obj="{}" data-ppteName='周末包'>周末包</li>
+    {{#  layui.each(d, function(index, item){ }}
+    <li class="type-item" data-obj='{{ item.paramDefine }}' data-ppteName='{{ item.ppteName }}' >{{ item.ppteName }}</li>
+    {{#  }); }}
+    <li class="type-item" data-obj="{}" data-ppteName='自定义包'>自定义</li>
+  </ul>
+</script>
+<script type="text/html" id="addDiscountTemplate">
+  <form class="layui-form form-box">
+    <div class="layui-field-box">
+      <div class="layui-form-item">
+        <label class="layui-form-label">{{ d.ppteName }}名称</label>
+        <div class="layui-input-inline">
+            <input type="text" name="name" class="layui-input" lay-verify="required">
+        </div>
+        <div class="layui-form-mid layui-word-aux">会展示在用户的套餐选择界面中</div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">有效期开始时间</label>
+        <div class="layui-input-inline">
+          <input type="text" name="startTime" class="layui-input" id="startDate" placeholder="请输入开始时间" onclick="layui.laydate({elem: this, format: 'YYYY-MM-DD'})" lay-verify="required">
+        </div>
+        <div class="layui-form-mid layui-word-aux">挂载该产品的车辆，过期后会自动移除该套餐</div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">有效期失效时间</label>
+        <div class="layui-input-inline">
+          <input type="text" name="endTime" class="layui-input" id="startDate" placeholder="请输入失效时间" onclick="layui.laydate({elem: this, format: 'YYYY-MM-DD'})" lay-verify="required">
+        </div>
+      </div>
+      <div class="layui-form-item" style="display: {{ d.type ? 'block' : 'none' }}">
+        <label class="layui-form-label">{{ d.tip }}</label>
+        <div class="layui-input-inline">
+          <input type='{{ d.type }}' class="layui-input" lay-verify="required">
+        </div>
+        <div class="layui-form-mid layui-word-aux">{{ d.unit }}</div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">价格</label>
+        <div class="layui-input-inline">
+          <input type="text" name="name" class="layui-input" lay-verify="required">
+        </div>
+        <div class="layui-form-mid layui-word-aux">元</div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">是否预付费</label>
+        <div class="layui-input-inline">
+          <input type="checkbox" lay-skin="primary" name="prePay" title="预付费">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">里程单独计费</label>
+        <div class="layui-input-inline">
+          <input type="checkbox" lay-skin="primary" name="prePay" title="按基础套餐里程计费">
+        </div>
+        <div class="layui-form-mid layui-word-aux">目前暂时不支持里程单独计费，后面会开放</div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">取消与否</label>
+        <div class="layui-input-inline">
+          <input type="checkbox" lay-skin="primary" name="prePay" title="可随时取消">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">可用优惠券</label>
+        <div class="layui-input-inline">
+            <input type="checkbox" lay-skin="primary" name="prePay" title="优惠券可同时使用">
+        </div>
+      </div>
+      <div class="layui-form-item">
+          <div class="layui-inline">
+          <label class="layui-form-label">宣传图片</label>
+          <input type="hidden" name="photo" id="hshowImage">
+          <div class="layui-input-inline" >
+              <input type="file"  name="upfile" id="showImage" class="layui-upload-file">
+          </div>
+      </div>
+    </div>
+    <div class="layui-form-item" style="text-align: center;margin-bottom: 0;">
+      <div class="layui-inline">
+        <button type="button" class="layui-btn layui-btn" lay-submit="" lay-filter="activity_add">确定创建</button>
+      </div>
+      <div class="layui-inline">
+        <button type="reset" class="layui-btn layui-btn-primary layui-btn">重置</button>
+      </div>
+    </div>
+  </form>
+</script>
 <script>
-  
     var global = window.parent.global;
     layui.config({
       base: 'js/',
       v: new Date().getTime()
-    }).use(['element','form','ajax', 'laytpl'], function () {
+    }).use(['element','form','ajax', 'laytpl', 'upload', 'laydate'], function () {
         var  $ = layui.jquery;
         var layerTips = parent.layer === undefined ? layui.layer : parent.layer; //获取父窗口的layer对象
         var form = layui.form();
         var ajax = layui.ajax();
         var element = layui.element();
         var laytpl = layui.laytpl;
+        var laydate = layui.laydate();
+        var typeList = {};
         var parmas = {
           t: new Date().getTime(),
           operatorId:global.userInfo.operatorId
         };
         ajax.post(global.host+"api/trade/getPricingPackageType",{},function(data){
-          $('#titleContent').innerHTML = laytpl($(templateTitle).innerHTML).render(data);
+          document.getElementById('titleContent').innerHTML = laytpl(document.getElementById('templateTitle').innerHTML).render(data);
+          var dom = $('#titleContent').children().eq(0);
+          dom.addClass('layui-this');
+          tab(dom);
         })
 
-        function tab(url) {
-          $(bundleAddContent).find('iframe').attr('src', url);
+        function tab(element) {
+          var pptId = $(element).attr('data-id');
+          // 默认第一个为基础分时套餐 这里可能有问题
+          var isDefault = $(element).attr('data-index') == 0 ? true : false;
+          ajax.post(global.host+"api/trade/getPricingPackageTemplate",{pptId: pptId},function(data){
+            typeList = data;
+            var tmpContent = document.getElementById('main-content');
+            tmpContent.innerHTML = '<form class="layui-form"></form>';
+            if (isDefault) {
+              var paramDefine = JSON.parse(data[0].paramDefine);
+              for (var i = 0; i < paramDefine.length; i++) {
+                tmpContent.appendChild(new Form(paramDefine[i]));
+              }
+              var submitBtn = 
+              '<div class="layui-form-item" style="text-align: center;margin-bottom: 0;">' +
+                '<div class="layui-inline">' +
+                  '<button type="button" class="layui-btn layui-btn" lay-submit="" lay-filter="activity_add">确定创建</button>' +
+                '</div>' +
+                '<div class="layui-inline">' +
+                  '<button type="reset" class="layui-btn layui-btn-primary layui-btn">重置</button>' +
+                '</div>' +
+              '</div>';
+              tmpContent.appendChild($(submitBtn)[0]);
+            } else {
+              tmpContent.innerHTML = laytpl(document.getElementById('typeListTemplate').innerHTML)
+                .render(data);
+              $('#main-content').find('.type-list li.type-item').eq(0).trigger("click");
+              layui.upload({
+                elem:"#showImage"
+                  ,url: global.host+"api/util/uploadByStream"
+                  ,success: function(res){
+                    $("#hshowImage").val(res.data);
+                    $("#showContiner").html('<img src="'+res.data+'" width="110px" height="60px" alt="车辆外观" >');            }
+              }); 
+            }
+          });
         }
-        
-        tab('bundle_add_base.html');
-        
-        $('.layui-tab-title').on('click', 'li', function (e) {
-          // var url = $(e.target).attr('url');
-          // tab(url);
-        })
-      
 
+        $('.layui-tab-title').on('click', 'li', function (e) {
+          tab(e.target);
+        });
+        // 点击选择优惠套餐中的类型
+        
+        $('#main-content').on('click', '.type-list li.type-item', function (e) {
+          var data = JSON.parse($(e.target).attr('data-obj'));
+          data.ppteName = $(e.target).attr('data-ppteName');
+          $(e.target).addClass('type-item-active').siblings().removeClass('type-item-active');
+          $('#main-content').find('.form-box').remove();
+          $('#main-content').append(laytpl(document.getElementById('addDiscountTemplate').innerHTML).render(data));
+          form.render();
+        });
         $(window).on('resize', function () {
           var $content = $('#bundleAddContent');
           $content.height($(this).height() - 61);

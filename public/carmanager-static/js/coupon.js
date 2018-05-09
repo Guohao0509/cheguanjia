@@ -39,7 +39,6 @@ Form.prototype = {
 }
 // 基本的文本控件
 var TextInput = function (params) {
-    
     return this.init(params);
 }
 
@@ -56,12 +55,12 @@ TextInput.prototype = {
         
         // 构造input的模板
         // params.showkey 用于拼接使用说明的字段
-        var templete = 
+        var templete = '' +
         '<div class="layui-form-item">' + 
            '<label class="layui-form-label">' + params.label + '</label>' +
             '<div class="layui-input-inline">' + 
                 '<input type="' + params.type + '" name="' + params.key + '" lay-verify="' + regexID + '" class="layui-input">' +
-                '<input type="hidden" lay-name="tmpInput" name="' + params.showkey ? params.showkey : '' + '">' +
+                '<input type="hidden" lay-name="tmpInput" name="' + params.showkey + '">' +
             '</div>' +
             '<div class="layui-form-mid layui-word-aux">' + params.unit + '&nbsp;&nbsp;&nbsp;&nbsp;' + params.tip + '</div>' +
         '</div>';

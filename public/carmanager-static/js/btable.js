@@ -173,12 +173,16 @@ layui.define(['element', 'common', 'paging', 'form'], function (exports) {
                 if (_config.checkbox) {
                     //绑定选择行事件
                     $(_config.elem).find('tbody.btable-content').children('tr').each(function (e) {
-                        //e.preventDefault();
-                        //e.stopPropagation();
-
+                        // e.preventDefault();
+                        // e.stopPropagation();
+                        
                         var $that = $(this);
-                        $that.on('click', function () {
+                        $that.children('td').eq(0).on('click','.layui-form-checkbox', function (e) {
+                          $that.trigger('click');
+                        })
+                        $that.on('click', function (e) {
                             //只允许选择一行
+                      
                             if (_config.singleSelect) {
                                 $that.siblings().each(function () {
                                     $(this).children('td').eq(0).children('input[type=checkbox]')[0].checked = false
@@ -188,7 +192,6 @@ layui.define(['element', 'common', 'paging', 'form'], function (exports) {
                                 //获取当前的状态
                                 var currState = $that.children('td').eq(0).children('input[type=checkbox]')[0].checked;
                                 $that.children('td').eq(0).children('input[type=checkbox]')[0].checked = !currState;
-
                                 //当前已选择的总行数
                                 var cbxCount = 0;
                                 $that.parent('tbody').children('tr').each(function () {
